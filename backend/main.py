@@ -98,9 +98,15 @@ import hmac
 import time
 
 from fastapi import Depends, Header
+from fastapi.staticfiles import StaticFiles
 
 # Initialize FastAPI
 app = FastAPI(title="DC Control API v50", version="5.0.0")
+
+# Servir frontend React/Vite desde el mismo Web Service de Render
+DIST_DIR = Path(__file__).resolve().parent.parent / "dist"
+if DIST_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(DIST_DIR), html=True), name="frontend")
 
 CORS_ORIGINS = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,null").split(",") if o.strip()]
 
