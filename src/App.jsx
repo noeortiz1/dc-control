@@ -426,7 +426,7 @@ export default function App() {
 
   const checkTeamsConnection = async () => {
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/system-settings/test-ms', {
+    const res = await fetch(`${API_BASE_URL}/api/system-settings/test-ms`, {
       method: 'POST'
     });
 
