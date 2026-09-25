@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart2, Bell, BellRing, Folder, Layers, Users, Settings, FileText, CheckCircle,
   AlertTriangle, RefreshCw, Sparkles, LogOut, ChevronRight, Upload,
@@ -2706,49 +2706,200 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* The 7 Sequential Gates Horizontal Progress Tabs */}
-                    <div className="space-y-1.5 pt-2">
-                      <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Las 7 Compuertas Secuenciales del Proceso</label>
-                      <div className="flex border border-slate-200 overflow-x-auto bg-slate-100 p-1.5 rounded-xl mb-1 gap-1.5 scrollbar-thin">
+                    {/* The 7 Sequential Gates - Visual Process Board */}
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                            Las 7 Compuertas Secuenciales del Proceso
+                          </label>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            Flujo comercial de la licitación · Selecciona una compuerta para consultar su detalle
+                          </p>
+                        </div>
+
+                        <div className="hidden md:flex items-center gap-3 text-[9px] font-bold uppercase tracking-wide">
+                          <span className="flex items-center gap-1.5 text-emerald-700">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Completada
+                          </span>
+                          <span className="flex items-center gap-1.5 text-amber-700">
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                            Actual
+                          </span>
+                          <span className="flex items-center gap-1.5 text-slate-400">
+                            <span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                            Pendiente
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-2.5">
                         {[1, 2, 3, 4, 5, 6, 7].map((num) => {
-                          const isCompleted = num < selectedProject.current_stage;
-                          const isActive = num === selectedProject.current_stage;
+                          const isClosed =
+                            num === 7 &&
+                            ["Ganado", "Perdido", "Cancelado"].includes(selectedProject.status);
+
+                          const isCompleted =
+                            num < selectedProject.current_stage || isClosed;
+
+                          const isActive =
+                            num === selectedProject.current_stage && !isClosed;
+
                           const isSelected = num === activeStepTab;
-                          
-                          const stepsNamesShort = [
-                            "P1: Levantamiento",
-                            "P2: Minuta Trabajo",
-                            "P3: Catálogo",
-                            "P4: Cotización",
-                            "P5: Rev. Dirección",
-                            "P6: Entrega Cliente",
-                            "P7: Cierre Comercial"
-                          ];
-                          
-                          let tabBg = "text-slate-500 hover:bg-slate-200/50 hover:text-slate-800";
-                          if (isSelected) {
-                            tabBg = "bg-[#0F4C81] text-white font-black shadow-md scale-102 transform";
-                          } else if (isActive) {
-                            tabBg = "bg-amber-100 text-amber-800 border-b-2 border-amber-500 font-bold animate-pulse";
+
+                          const isBlocked =
+                            num > selectedProject.current_stage && !isClosed;
+
+                          const gateData = [
+                            {
+                              code: "P1",
+                              title: "Levantamiento",
+                              desc: "Alcance, requerimientos y viabilidad inicial",
+                              owner: selectedProject.assigned_ventas || "Ventas",
+                              icon: "📋"
+                            },
+                            {
+                              code: "P2",
+                              title: "Minuta de Trabajo",
+                              desc: "Alineación y doble confirmación",
+                              owner: `${selectedProject.assigned_ventas || "Ventas"} + ${selectedProject.assigned_lider || "Líder Regional"}`,
+                              icon: "🤝"
+                            },
+                            {
+                              code: "P3",
+                              title: "Catálogo",
+                              desc: "Conceptos e ingeniería técnica",
+                              owner: selectedProject.assigned_lider || "Líder Regional",
+                              icon: "⚙️"
+                            },
+                            {
+                              code: "P4",
+                              title: "Cotización",
+                              desc: "Precios, márgenes y utilidad",
+                              owner: selectedProject.assigned_costos || "Analista de Costos",
+                              icon: "📊"
+                            },
+                            {
+                              code: "P5",
+                              title: "Revisión Dirección",
+                              desc: "Autorización ejecutiva",
+                              owner: "Dirección General",
+                              icon: "🔑"
+                            },
+                            {
+                              code: "P6",
+                              title: "Entrega Cliente",
+                              desc: "Entrega formal de propuesta",
+                              owner: selectedProject.assigned_ventas || "Ventas",
+                              icon: "🚚"
+                            },
+                            {
+                              code: "P7",
+                              title: "Cierre Comercial",
+                              desc: "Ganado, Perdido o Cancelado",
+                              owner: "Dirección General",
+                              icon: "🏁"
+                            }
+                          ][num - 1];
+
+                          let statusText = "Pendiente";
+                          let statusClass = "bg-slate-100 text-slate-500 border-slate-200";
+                          let cardClass = "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md";
+                          let numberClass = "bg-slate-100 text-slate-500";
+                          let statusDot = "bg-slate-300";                          if (isClosed) {
+                            if (selectedProject.status === "Ganado") {
+                              statusText = "Cerrada — Ganada";
+                              statusClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                              cardClass = "bg-emerald-50/40 border-emerald-300 hover:border-emerald-400 hover:shadow-md";
+                              numberClass = "bg-emerald-500 text-white";
+                              statusDot = "bg-emerald-500";
+                            } else if (selectedProject.status === "Perdido") {
+                              statusText = "Cerrada — Perdida";
+                              statusClass = "bg-red-50 text-red-700 border-red-200";
+                              cardClass = "bg-red-50/40 border-red-300 hover:border-red-400 hover:shadow-md";
+                              numberClass = "bg-red-500 text-white";
+                              statusDot = "bg-red-500";
+                            } else {
+                              statusText = "Cerrada — Cancelada";
+                              statusClass = "bg-slate-100 text-slate-600 border-slate-300";
+                              cardClass = "bg-slate-50 border-slate-300 hover:border-slate-400 hover:shadow-md";
+                              numberClass = "bg-slate-500 text-white";
+                              statusDot = "bg-slate-500";
+                            }
                           } else if (isCompleted) {
-                            tabBg = "bg-emerald-50 text-emerald-800 font-semibold border-b-2 border-emerald-500";
+                            statusText = "Completada";
+                            statusClass = "bg-emerald-50 text-emerald-700 border-emerald-100";
+                            cardClass = "bg-emerald-50/40 border-emerald-200 hover:border-emerald-300 hover:shadow-md";
+                            numberClass = "bg-emerald-500 text-white";
+                            statusDot = "bg-emerald-500";
+                          } else if (isActive) {
+                            statusText = "En proceso";
+                            statusClass = "bg-amber-50 text-amber-700 border-amber-200";
+                            cardClass = "bg-amber-50/60 border-amber-300 shadow-md ring-1 ring-amber-200";
+                            numberClass = "bg-amber-500 text-white";
+                            statusDot = "bg-amber-400";
+                          } else if (isBlocked) {
+                            statusText = "Bloqueada";
+                            statusClass = "bg-slate-50 text-slate-400 border-slate-200";
+                            cardClass = "bg-slate-50 border-slate-200 opacity-80";
+                            numberClass = "bg-slate-200 text-slate-400";
+                            statusDot = "bg-slate-300";
                           }
-                          
+
+                          if (isSelected) {
+                            cardClass += " ring-2 ring-[#0F4C81]/25 border-[#0F4C81]";
+                          }
+
                           return (
                             <button
                               key={num}
                               type="button"
                               onClick={() => setActiveStepTab(num)}
-                              className={`flex-1 min-w-[135px] text-center py-2 px-3 rounded-lg text-[10px] uppercase tracking-wide transition-all flex items-center justify-center space-x-1.5 ${tabBg}`}
+                              className={`relative text-left rounded-xl border p-3 transition-all duration-200 min-h-[150px] flex flex-col justify-between ${cardClass}`}
                             >
-                              {isCompleted && <CheckCircle size={10} className="text-emerald-600" />}
-                              <span>{stepsNamesShort[num - 1]}</span>
+                              <div>
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black ${numberClass}`}>
+                                    {gateData.code}
+                                  </div>
+
+                                  <span className="text-lg leading-none">
+                                    {gateData.icon}
+                                  </span>
+                                </div>
+
+                                <div className="mt-2.5">
+                                  <p className="text-[11px] font-extrabold text-slate-800 leading-tight">
+                                    {gateData.title}
+                                  </p>
+                                  <p className="text-[9px] text-slate-500 leading-relaxed mt-1">
+                                    {gateData.desc}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="mt-3">
+                                <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-[8px] font-extrabold uppercase tracking-wide ${statusClass}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`}></span>
+                                  {statusText}
+                                </div>
+
+                                <p className="text-[8px] text-slate-400 mt-1.5 truncate" title={gateData.owner}>
+                                  Responsable: <span className="font-bold text-slate-500">{gateData.owner}</span>
+                                </p>
+                              </div>
+
+                              {isActive && (
+                                <div className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[7px] font-black uppercase px-2 py-0.5 rounded-full shadow-sm">
+                                  ETAPA ACTUAL
+                                </div>
+                              )}
                             </button>
                           );
                         })}
                       </div>
                     </div>
-
                     {/* Selected Step Tab Content Container */}
                     <div className="border border-slate-200 rounded-2xl p-5 bg-white space-y-5 shadow-xs">
                       
@@ -3147,7 +3298,7 @@ export default function App() {
 )}
 
                             {/* Paso 7 Cierre Comercial - Beautiful Inline Input Forms instead of prompt */}
-                            {selectedProject.current_stage === 7 && (roleClean.includes("director") || isStrictAdmin) && !["Ganado", "Perdido", "Cancelado"].includes(selectedProject.status) && (
+                            {Number(selectedProject.current_stage) === 7 && isAdminOrDirector && !["Ganado", "Perdido", "Cancelado"].includes(selectedProject.status) && (
                               <div className="w-full space-y-3">
                                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs">
                                   <div className="flex items-center space-x-2">
@@ -3942,6 +4093,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
