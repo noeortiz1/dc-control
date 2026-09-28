@@ -2478,18 +2478,15 @@ def test_ms_connection(current_user=Depends(require_admin)):
 
 @app.post("/api/system-settings/test-smtp")
 def test_smtp_connection(admin_email: str = Form(...), current_user=Depends(require_admin)):
-    smtp_host = os.getenv("SMTP_HOST", "").strip() or get_system_setting("smtp_host")
-    smtp_port = os.getenv("SMTP_PORT", "").strip() or get_system_setting("smtp_port")
-    smtp_user = os.getenv("SMTP_USER", "").strip() or get_system_setting("smtp_user")
-    smtp_pass = os.getenv("SMTP_PASS", "").strip() or get_system_setting("smtp_pass")
-    smtp_sender = os.getenv("SMTP_SENDER", "").strip() or get_system_setting("smtp_sender", "DC Control Notificaciones")
-
     try:
-        msg = MIMEMultipart()
-        msg['From'] = f"{smtp_sender} <{smtp_user}>"
-        msg['To'] = admin_email
-        msg['Subject'] = "DC Control - Validación SMTP Exitosa"
-        body_html = f"""<html>
+        import requests
+
+        token = get_ms_graph_token()
+        sender_email = "noe_ortiz@dccontrol.com.mx"
+
+        url = f"https://graph.microsoft.com/v1.0/users/{sender_email}/sendMail"
+
+        body_html = """<html>
 <body style="font-family: Arial, sans-serif; color: #333333;">
     <div style="background-color: #111827; color: white; padding: 15px 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #0F4C81;">
         <h2 style="margin: 0; font-size: 18px;">Validación de Consola de Control - DC Control</h2>
@@ -2497,22 +2494,61 @@ def test_smtp_connection(admin_email: str = Form(...), current_user=Depends(requ
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
         <p>¡Hola <strong>Director DC Control</strong>!</p>
         <p>Este es un correo de prueba enviado desde tu nueva <strong>Consola de Control de Escritorio</strong>.</p>
-        <p>La configuración del servidor SMTP y el envío global de notificaciones han sido validados con éxito. El sistema ya está listo para alertar a tu equipo técnico y comercial en tiempo real.</p>
+        <p>El envío mediante Microsoft Graph ha sido validado con éxito.</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;">
         <p style="font-size: 11px; color: #6b7280; text-align: center;">DC Control S.A. de C.V. • Gestión Comercial</p>
     </div>
 </body>
 </html>"""
-        msg.attach(MIMEText(body_html, 'html'))
-        server = smtplib.SMTP(smtp_host, int(smtp_port), timeout=10)
-        server.starttls()
-        server.login(smtp_user, smtp_pass)
-        server.sendmail(smtp_user, admin_email, msg.as_string())
-        server.quit()
-        return {"success": True}
+
+        payload = {
+            "message": {
+                "subject": "DC Control - Validación de correo exitosa",
+                "body": {
+                    "contentType": "HTML",
+                    "content": body_html
+                },
+                "toRecipients": [
+                    {
+                        "emailAddress": {
+                            "address": admin_email
+                        }
+                    }
+                ]
+            },
+            "saveToSentItems": True
+        }
+
+        response = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            },
+            json=payload,
+            timeout=20
+        )
+
+        if response.status_code == 202:
+            return {
+                "success": True,
+                "sender": sender_email,
+                "recipient": admin_email
+            }
+
+        try:
+            error_data = response.json()
+            error_message = error_data.get("error", {}).get("message", response.text)
+        except Exception:
+            error_message = response.text
+
+        return {
+            "success": False,
+            "error": f"Microsoft Graph HTTP {response.status_code}: {error_message}"
+        }
+
     except Exception as ex:
         return {"success": False, "error": str(ex)}
-
 @app.post("/api/backup/wipe")
 def wipe_database(current_user=Depends(require_admin)):
     conn = get_db_connection()

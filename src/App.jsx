@@ -3559,7 +3559,6 @@ export default function App() {
                         value={myProfilePin}
                         onChange={(e) => setMyProfilePin(e.target.value)}
                         className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-800 focus:outline-none"
-                        type="password" placeholder="••••"
                         required
                       />
                     </div>
