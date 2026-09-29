@@ -637,16 +637,16 @@ def _bg_dispatch_parameter_change_notifications(project_id, new_step_num, new_ta
                                 },
                                 {
                                     "type": "TextBlock",
-                                    "text": f"Hola {mentions_text}, se han modificado de manera oficial los parÃ¡metros del proyecto **{project_id} - {p['name']}**.",
+                                    "text": f"Hola {mentions_text}, se han modificado de manera oficial los parámetros del proyecto **{project_id} - {p['name']}**.",
                                     "wrap": True
                                 },
                                 {
                                     "type": "FactSet",
                                     "facts": [
                                         {"title": "Cliente:", "value": str(p['client'])},
-                                        {"title": "Nueva Fecha LÃ­mite:", "value": str(new_target_date)},
+                                        {"title": "Nueva Fecha Límite:", "value": str(new_target_date)},
                                         {"title": "Paso Activo:", "value": f"Paso {new_step_num}"},
-                                        {"title": "JustificaciÃ³n:", "value": str(justification or "No especificada")}
+                                        {"title": "Justificación:", "value": str(justification or "No especificada")}
                                     ]
                                 }
                             ],
@@ -714,8 +714,8 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
             search_targets = [t for t in search_targets if t]
             placeholders = ', '.join(['%s'] * len(search_targets))
             cursor.execute(
-                f"SELECT email, full_name FROM users WHERE TRIM(full_name) IN ({placeholders}) OR TRIM(role) IN ({placeholders})",
-                tuple(search_targets) + tuple(search_targets)
+                f"SELECT email, full_name FROM users WHERE TRIM(full_name) IN ({placeholders})",
+                tuple(search_targets)
             )
             rows = cursor.fetchall()
             for r in rows:
@@ -1821,7 +1821,7 @@ def edit_project(proj_id: str, req: EditProjectRequest, current_user=Depends(req
         dispatch_parameter_change_notifications(proj_id, req.current_stage, req.target_date, req.justification)
         audit_name = current_user.get("full_name") or current_user.get("username") or "Usuario"
         audit_role = current_user.get("role") or "Admin/Director"
-        log_audit(proj_id, audit_name, audit_role, f"ModificÃ³ parÃ¡metros (Etapa: {req.current_stage}, Prioridad: {req.priority}, LÃ­mite: {req.target_date})", comments=req.justification if req.justification else None)
+        log_audit(proj_id, audit_name, audit_role, f"ModificÃ³ parámetros (Etapa: {req.current_stage}, Prioridad: {req.priority}, Límite: {req.target_date})", comments=req.justification if req.justification else None)
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -2769,7 +2769,7 @@ def _generate_executive_report_docx():
             tbl_p = doc.add_table(rows=len(df_active) + 1, cols=6)
             tbl_p.alignment = WD_TABLE_ALIGNMENT.CENTER
             tbl_p.autofit = False
-            headers_p = ["Folio ID", "Obra / Proyecto", "Cliente", "Paso Atorado", "Fecha LÃ­mite", "Monto Estimado"]
+            headers_p = ["Folio ID", "Obra / Proyecto", "Cliente", "Paso Atorado", "Fecha Límite", "Monto Estimado"]
             widths_p = [Inches(1.0), Inches(1.8), Inches(1.5), Inches(1.2), Inches(1.2), Inches(1.1)]
 
             # Header Row Styling
