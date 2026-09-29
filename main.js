@@ -39,7 +39,7 @@ function createWindow() {
     height: 800,
     minWidth: 1100,
     minHeight: 700,
-    title: 'DC Control - Trazabilidad y Gobernabilidad',
+    title: 'DC Control App v1.0.0',
     icon: path.join(__dirname, 'logo.png'),
     backgroundColor: '#0F4C81',
     show: false,

@@ -215,7 +215,7 @@ export default function App() {
   const [stepFile, setStepFile] = useState(null);
   const [reversalTarget, setReversalTarget] = useState(1);
   const [projectUploads, setProjectUploads] = useState([]);
-  const [directorReportEmails, setDirectorReportEmails] = useState('director@dccontrol.com');
+  const [directorReportEmails, setDirectorReportEmails] = useState('noe_ortiz@dccontrol.com.mx');
   const [emailSending, setEmailSending] = useState(false);
   const [reversalJustification, setReversalJustification] = useState('');
   const [p5ModificationJustification, setP5ModificationJustification] = useState('');
@@ -461,7 +461,7 @@ export default function App() {
         setTeamsWebhook('');
         setTeamsWebhookConfigured(!!data.teams_webhook_configured);
         setNotifEnabled(data.notifications_enabled);
-        setDirectorReportEmails(data.director_report_emails || "director@dccontrol.com");
+        setDirectorReportEmails(data.director_report_emails || "noe_ortiz@dccontrol.com.mx");
         setMsTenant(data.ms_tenant_id);
         setMsClient(data.ms_client_id);
         setMsSecret('');
@@ -891,13 +891,8 @@ export default function App() {
 
   const handleSaveSMTP = async (e) => {
     e.preventDefault();
+
     const payload = {
-      smtp_host: smtpHost,
-      smtp_port: smtpPort,
-      smtp_user: smtpUser,
-      smtp_pass: smtpPass,
-      smtp_sender: smtpSender,
-      teams_webhook_url: teamsWebhook,
       notifications_enabled: notifEnabled,
       director_report_emails: directorReportEmails
     };
@@ -908,14 +903,18 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (res.ok) {
-        alert('Configuración SMTP guardada correctamente.');
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success !== false) {
+        alert('Destinatarios de notificaciones guardados correctamente.');
+      } else {
+        alert(`No se pudieron guardar los destinatarios: ${data.error || 'Error desconocido'}`);
       }
     } catch {
       alert('Error de red.');
     }
   };
-
   const handleSaveMS = async (e) => {
     e.preventDefault();
     const payload = { ms_tenant_id: msTenant, ms_client_id: msClient, ms_client_secret: msSecret };
@@ -1672,7 +1671,7 @@ export default function App() {
             <span>Cerrar Sesión</span>
           </button>
           <div className="text-center text-[9px] text-slate-600 mt-2 font-mono">
-            Versión 23.0
+            Versión 1.0.0
           </div>
         </div>
       </div>
@@ -3915,124 +3914,79 @@ export default function App() {
                 {/* Column 2: Notifications Config */}
                 <div>
                   
-                  {/* SMTP Config panel */}
+                  {/* Microsoft Graph Notification panel */}
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm text-slate-800 space-y-4">
                     <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 flex items-center">
-                      <MessageSquare size={14} className="mr-1.5 text-amber-500" /> Canales de Notificación (SMTP &amp; Teams)
+                      <MessageSquare size={14} className="mr-1.5 text-amber-500" /> Canales de Notificación
                     </h3>
-                    
+
                     <form onSubmit={handleSaveSMTP} className="space-y-3.5">
                       <div className="flex items-center space-x-2.5 mb-2 bg-slate-50 p-2.5 rounded border border-slate-200">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={notifEnabled}
                           onChange={(e) => setNotifEnabled(e.target.checked)}
                           className="rounded bg-slate-50 border-slate-200 text-[#0F4C81] focus:ring-0"
                         />
                         <span className="text-[11px] font-bold text-slate-700">Habilitar Notificaciones de Sistema</span>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Servidor SMTP Host</label>
-                          <input 
-                            type="text" 
-                            value={smtpHost}
-                            onChange={(e) => setSmtpHost(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-slate-800"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Puerto SMTP</label>
-                          <input 
-                            type="text" 
-                            value={smtpPort}
-                            onChange={(e) => setSmtpPort(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-slate-800"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Correo Emisor (SMTP User)</label>
-                          <input 
-                            type="email" 
-                            value={smtpUser}
-                            onChange={(e) => setSmtpUser(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-slate-800"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nueva Contraseña SMTP (Clave de app)</label>
-                          <input 
-                            type="password" 
-                            value={smtpPass}
-                            onChange={(e) => setSmtpPass(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-slate-800"
-                            placeholder="••••••••"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nombre Remitente Visible</label>
-                          <input 
-                            type="text" 
-                            value={smtpSender}
-                            onChange={(e) => setSmtpSender(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-slate-800"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Teams Webhook URL</label>
-                          <input 
-                            type="text" 
-                            value={teamsWebhook}
-                            onChange={(e) => setTeamsWebhook(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded p-1.5 text-slate-800"
-                            placeholder={teamsWebhookConfigured ? "Configurado en servidor (dejar vacío para conservar)" : "https://dccontrol.webhook.office.com/..."}
-                          />
-                        </div>
-                      </div>
+
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Destinatarios del Reporte de Dirección (Separados por coma)</label>
-                        <input 
-                          type="text" 
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Correo Emisor (Microsoft 365)
+                        </label>
+                        <input
+                          type="email"
+                          value="noe_ortiz@dccontrol.com.mx"
+                          readOnly
+                          className="w-full bg-slate-100 border border-slate-200 rounded p-2 text-slate-700 cursor-not-allowed"
+                        />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Los correos del sistema se enviar?n mediante Microsoft Graph.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                          Destinatarios de Notificaciones (Separados por coma)
+                        </label>
+                        <input
+                          type="text"
                           value={directorReportEmails}
                           onChange={(e) => setDirectorReportEmails(e.target.value)}
                           className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 text-xs focus:outline-none focus:border-[#0F4C81]"
-                          placeholder="director@dccontrol.com, gerente@dccontrol.com"
+                          placeholder="noe_ortiz@dccontrol.com.mx, otro@dccontrol.com.mx"
                         />
+                        <p className="text-[9px] text-slate-400 mt-1">
+                          Puedes agregar uno o varios correos separados por coma.
+                        </p>
                       </div>
-                      
+
                       <div className="flex justify-end space-x-2 pt-2 border-t border-slate-200">
-                        <button 
+                        <button
                           type="button"
                           onClick={handleTestSMTP}
                           className="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold px-4 py-1.5 rounded transition text-xs"
                         >
                           Enviar Correo Prueba
                         </button>
-                        <button 
+                        <button
                           type="submit"
                           className="bg-[#0F4C81] hover:bg-[#0B3566] text-white font-bold px-5 py-1.5 rounded transition text-xs"
                         >
-                          Guardar SMTP
+                          Guardar Destinatarios
                         </button>
                       </div>
                     </form>
                   </div>
-                  
+
                 </div>
 
               </div>
 
             </div>
           )}
-          
-          {/* TAB 8: BITÁCORA AUDITORÍA */}
+
           {activeTab === 'audit' && hasPrivilege('reports') && (
             <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 shadow text-xs space-y-4">
               <div className="flex justify-between items-center border-b border-slate-200 pb-3">
@@ -4092,8 +4046,3 @@ export default function App() {
     </div>
   );
 }
-
-
-
-
-
