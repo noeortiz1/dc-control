@@ -1379,15 +1379,15 @@ export default function App() {
 
   const semaforoWarnings = getDeliveryWarnings();
 
-  const handleOpenFolder = async (projId, folderUrl) => {
-    if (folderUrl && (folderUrl.startsWith('http://') || folderUrl.startsWith('https://'))) {
-      window.open(folderUrl, '_blank');
-      return;
-    }
+  const handleOpenFolder = async (projId) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/open-folder/${projId}`);
       if (res.ok) {
         const data = await res.json();
+        if (data.url) {
+          window.open(data.url, '_blank');
+          return;
+        }
         alert(`📁 ${data.message || 'Ubicación SharePoint del proyecto'}`);
       } else {
         alert('📁 No se encontró la ubicación SharePoint del proyecto.');

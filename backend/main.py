@@ -323,72 +323,60 @@ def send_ms_graph_email(to_emails, subject, body_html, attachments=None, sender_
         "recipients": recipients
     }
 def get_sharepoint_drive_details():
-    try:
-        cached_site_id = get_system_setting("ms_site_id", "")
-        cached_drive_id = get_system_setting("ms_drive_id", "")
-        if cached_site_id and cached_drive_id:
-            return cached_site_id, cached_drive_id
-    except Exception:
-        pass
-
-    try:
-        token = get_ms_graph_token()
-    except Exception:
-        return None, None
-
-    headers = {"Authorization": f"Bearer {token}"}
     import requests
-    import urllib.parse
 
-    site_id = None
-    search_queries = ["DC Control", "DC Control Cotizaciones", "DC_Control"]
-    for q in search_queries:
-        try:
-            url = f"https://graph.microsoft.com/v1.0/sites?search={urllib.parse.quote(q)}"
-            r = requests.get(url, headers=headers, timeout=10)
-            if r.status_code == 200:
-                sites = r.json().get("value", [])
-                if sites:
-                    site_id = sites[0]["id"]
-                    break
-        except Exception:
-            pass
+    # DC Control utiliza un sitio SharePoint espec?fico.
+    site_host = "ingenieriadc.sharepoint.com"
+    site_path = "/sites/SalesHubDCControl"
+
+    token = get_ms_graph_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Resolver directamente el sitio correcto por hostname + ruta.
+    site_url = f"https://graph.microsoft.com/v1.0/sites/{site_host}:{site_path}"
+    site_response = requests.get(site_url, headers=headers, timeout=15)
+
+    if site_response.status_code != 200:
+        raise Exception(
+            f"No se pudo encontrar el sitio SharePoint SalesHubDCControl: "
+            f"HTTP {site_response.status_code} - {site_response.text}"
+        )
+
+    site_data = site_response.json()
+    site_id = site_data.get("id")
 
     if not site_id:
-        try:
-            r = requests.get("https://graph.microsoft.com/v1.0/sites/root", headers=headers, timeout=10)
-            if r.status_code == 200:
-                site_id = r.json()["id"]
-        except Exception:
-            pass
+        raise Exception(
+            "Microsoft Graph no devolvi? el Site ID de SalesHubDCControl."
+        )
 
-    drive_id = None
-    if site_id:
-        try:
-            r = requests.get(f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive", headers=headers, timeout=10)
-            if r.status_code == 200:
-                drive_id = r.json()["id"]
-        except Exception:
-            pass
+    # Obtener el Drive principal de ese sitio.
+    drive_response = requests.get(
+        f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive",
+        headers=headers,
+        timeout=15
+    )
+
+    if drive_response.status_code != 200:
+        raise Exception(
+            f"No se pudo obtener el Drive de SalesHubDCControl: "
+            f"HTTP {drive_response.status_code} - {drive_response.text}"
+        )
+
+    drive_data = drive_response.json()
+    drive_id = drive_data.get("id")
 
     if not drive_id:
-        try:
-            r = requests.get("https://graph.microsoft.com/v1.0/drives", headers=headers, timeout=10)
-            if r.status_code == 200:
-                drives = r.json().get("value", [])
-                if drives:
-                    drive_id = drives[0]["id"]
-        except Exception:
-            pass
+        raise Exception(
+            "Microsoft Graph no devolvi? el Drive ID de SalesHubDCControl."
+        )
 
-    if site_id and drive_id:
-        try:
-            set_system_setting("ms_site_id", site_id)
-            set_system_setting("ms_drive_id", drive_id)
-        except Exception:
-            pass
+    # Guardar los IDs correctos para las siguientes llamadas.
+    set_system_setting("ms_site_id", site_id)
+    set_system_setting("ms_drive_id", drive_id)
 
     return site_id, drive_id
+
 
 def sharepoint_project_folder_exists(project_id):
     import requests
@@ -3723,25 +3711,38 @@ def get_performance_report(current_user=Depends(require_report_access)):
 
 @app.get("/api/open-folder/{project_id}")
 def open_project_folder(project_id: str, current_user=Depends(get_current_user)):
-    # In the cloud there is no user Windows folder to open. Return the project's
-    # SharePoint location so the Electron client can open it in the browser.
+    # Resolver siempre la carpeta real en SharePoint mediante Microsoft Graph.
     conn = get_db_connection()
     try:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cursor.execute("SELECT sharepoint_folder_url FROM projects WHERE id = %s", (project_id,))
-        row = cursor.fetchone()
-        if not row or not row.get('sharepoint_folder_url'):
-            raise HTTPException(status_code=404, detail="No hay carpeta SharePoint configurada para este proyecto")
+
         cursor.execute("SELECT * FROM projects WHERE id = %s", (project_id,))
         project = cursor.fetchone()
+
         if not project:
             raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
         require_project_read_access(current_user, project)
+
+        try:
+            _, sharepoint_url = create_sharepoint_folder_ms_graph(project_id)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=502,
+                detail=f"No se pudo resolver la carpeta SharePoint: {exc}"
+            )
+
+        if not sharepoint_url:
+            raise HTTPException(
+                status_code=404,
+                detail="No se encontró la carpeta SharePoint del proyecto"
+            )
+
         return {
             "status": "success",
-            "path": row['sharepoint_folder_url'],
-            "url": row['sharepoint_folder_url'],
-            "message": "UbicaciÃ³n SharePoint del proyecto"
+            "path": sharepoint_url,
+            "url": sharepoint_url,
+            "message": "Ubicación SharePoint del proyecto"
         }
     finally:
         put_db_connection(conn)
