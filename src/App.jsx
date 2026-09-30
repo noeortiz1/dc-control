@@ -2677,7 +2677,7 @@ export default function App() {
                     {/* Word report download downloads */}
                     <div className="flex flex-wrap gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
                       <button 
-                        onClick={() => {handleOpenFolder(selectedProject.id, selectedProject.sharepoint_folder_url);
+                        onClick={() => {handleOpenFolder(selectedProject.id);
 }}
                         className="bg-[#0F4C81] hover:bg-[#0B3566] text-white font-bold px-3.5 py-2 rounded-lg transition-all text-[11px] flex items-center space-x-1.5 shadow-2xs"
                       >
