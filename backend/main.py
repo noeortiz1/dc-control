@@ -1,4 +1,4 @@
-﻿def create_sharepoint_folder_ms_graph(folder_name):
+def create_sharepoint_folder_ms_graph(folder_name):
     import requests
     import urllib.parse
 
@@ -118,43 +118,43 @@ app.add_middleware(
 # Constants & Connection Settings
 DB_URI = os.getenv("DATABASE_URL", "").strip()
 if not DB_URI:
-    raise RuntimeError("DATABASE_URL no estÃ¡ configurada. Define la cadena de conexiÃ³n de Supabase/PostgreSQL en las variables de entorno del servidor.")
+    raise RuntimeError("DATABASE_URL no está configurada. Define la cadena de conexión de Supabase/PostgreSQL en las variables de entorno del servidor.")
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ESTADOS_MEXICO = {
-    "CDMX": "LÃ­der Regional - Sur",
-    "Estado de MÃ©xico": "LÃ­der Regional - Sur",
-    "QuerÃ©taro": "LÃ­der Regional - Sur",
-    "Guanajuato": "LÃ­der Regional - Sur",
-    "Jalisco": "LÃ­der Regional - Sur",
-    "MichoacÃ¡n": "LÃ­der Regional - Sur",
-    "Puebla": "LÃ­der Regional - Sur",
-    "Veracruz": "LÃ­der Regional - Sur",
-    "Hidalgo": "LÃ­der Regional - Sur",
-    "Morelos": "LÃ­der Regional - Sur",
-    "Guerrero": "LÃ­der Regional - Sur",
-    "Oaxaca": "LÃ­der Regional - Sur",
-    "Chiapas": "LÃ­der Regional - Sur",
-    "Tabasco": "LÃ­der Regional - Sur",
-    "Campeche": "LÃ­der Regional - Sur",
-    "YucatÃ¡n": "LÃ­der Regional - Sur",
-    "Quintana Roo": "LÃ­der Regional - Sur",
-    "Tlaxcala": "LÃ­der Regional - Sur",
-    "Colima": "LÃ­der Regional - Sur",
-    "Nayarit": "LÃ­der Regional - Sur",
-    "Nuevo LeÃ³n": "LÃ­der Regional - Norte",
-    "Chihuahua": "LÃ­der Regional - Norte",
-    "Coahuila": "LÃ­der Regional - Norte",
-    "Sonora": "LÃ­der Regional - Norte",
-    "Baja California": "LÃ­der Regional - Norte",
-    "Baja California Sur": "LÃ­der Regional - Norte",
-    "San Luis PotosÃ­": "LÃ­der Regional - Norte",
-    "Aguascalientes": "LÃ­der Regional - Norte",
-    "Durango": "LÃ­der Regional - Norte",
-    "Sinaloa": "LÃ­der Regional - Norte",
-    "Zacatecas": "LÃ­der Regional - Norte",
-    "Tamaulipas": "LÃ­der Regional - Norte"
+    "CDMX": "Líder Regional - Sur",
+    "Estado de México": "Líder Regional - Sur",
+    "Querétaro": "Líder Regional - Sur",
+    "Guanajuato": "Líder Regional - Sur",
+    "Jalisco": "Líder Regional - Sur",
+    "Michoacán": "Líder Regional - Sur",
+    "Puebla": "Líder Regional - Sur",
+    "Veracruz": "Líder Regional - Sur",
+    "Hidalgo": "Líder Regional - Sur",
+    "Morelos": "Líder Regional - Sur",
+    "Guerrero": "Líder Regional - Sur",
+    "Oaxaca": "Líder Regional - Sur",
+    "Chiapas": "Líder Regional - Sur",
+    "Tabasco": "Líder Regional - Sur",
+    "Campeche": "Líder Regional - Sur",
+    "Yucatán": "Líder Regional - Sur",
+    "Quintana Roo": "Líder Regional - Sur",
+    "Tlaxcala": "Líder Regional - Sur",
+    "Colima": "Líder Regional - Sur",
+    "Nayarit": "Líder Regional - Sur",
+    "Nuevo León": "Líder Regional - Norte",
+    "Chihuahua": "Líder Regional - Norte",
+    "Coahuila": "Líder Regional - Norte",
+    "Sonora": "Líder Regional - Norte",
+    "Baja California": "Líder Regional - Norte",
+    "Baja California Sur": "Líder Regional - Norte",
+    "San Luis Potosí": "Líder Regional - Norte",
+    "Aguascalientes": "Líder Regional - Norte",
+    "Durango": "Líder Regional - Norte",
+    "Sinaloa": "Líder Regional - Norte",
+    "Zacatecas": "Líder Regional - Norte",
+    "Tamaulipas": "Líder Regional - Norte"
 }
 
 # Connection pool
@@ -225,7 +225,7 @@ def get_ms_graph_token():
 
 def send_ms_graph_email(to_emails, subject, body_html, attachments=None, sender_email="noe_ortiz@dccontrol.com.mx"):
     """
-    EnvÃ­a correo mediante Microsoft Graph.
+    Envía correo mediante Microsoft Graph.
     to_emails: string separado por coma o punto y coma, o lista de correos.
     attachments: lista opcional de dicts con:
         name, content_type, content_bytes
@@ -314,7 +314,7 @@ def send_ms_graph_email(to_emails, subject, body_html, attachments=None, sender_
             detail = response.text
 
         raise RuntimeError(
-            f"Microsoft Graph rechazÃ³ el envÃ­o ({response.status_code}): {detail}"
+            f"Microsoft Graph rechazó el envío ({response.status_code}): {detail}"
         )
 
     return {
@@ -325,7 +325,7 @@ def send_ms_graph_email(to_emails, subject, body_html, attachments=None, sender_
 def get_sharepoint_drive_details():
     import requests
 
-    # DC Control utiliza un sitio SharePoint especÃ­fico.
+    # DC Control utiliza un sitio SharePoint específico.
     site_host = "ingenieriadc.sharepoint.com"
     site_path = "/sites/SalesHubDCControl"
 
@@ -347,7 +347,7 @@ def get_sharepoint_drive_details():
 
     if not site_id:
         raise Exception(
-            "Microsoft Graph no devolvi? el Site ID de SalesHubDCControl."
+            "Microsoft Graph no devolvió el Site ID de SalesHubDCControl."
         )
 
     # Obtener el Drive principal de ese sitio.
@@ -368,7 +368,7 @@ def get_sharepoint_drive_details():
 
     if not drive_id:
         raise Exception(
-            "Microsoft Graph no devolvi? el Drive ID de SalesHubDCControl."
+            "Microsoft Graph no devolvió el Drive ID de SalesHubDCControl."
         )
 
     # Guardar los IDs correctos para las siguientes llamadas.
@@ -467,7 +467,7 @@ def delete_file_from_sharepoint(file_id):
         pass
 
 def delete_empty_project_folder_from_sharepoint(project_id):
-    """Elimina la carpeta del proyecto solo si existe y estÃ¡ vacÃ­a."""
+    """Elimina la carpeta del proyecto solo si existe y está vacía."""
     import requests
     import urllib.parse
 
@@ -493,13 +493,13 @@ def delete_empty_project_folder_from_sharepoint(project_id):
     children_response.raise_for_status()
 
     if children_response.json().get("value"):
-        return False, "La carpeta conserva archivos y no se eliminÃ³"
+        return False, "La carpeta conserva archivos y no se eliminó"
 
     delete_url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item_id}"
     delete_response = requests.delete(delete_url, headers=headers, timeout=15)
     if delete_response.status_code not in (200, 204):
         raise Exception(f"No se pudo eliminar la carpeta SharePoint: HTTP {delete_response.status_code}")
-    return True, "Carpeta vacÃ­a eliminada"
+    return True, "Carpeta vacía eliminada"
 
 # Audit Logging Helper
 def log_audit(project_id, user_name, role, action, comments=None):
@@ -566,24 +566,24 @@ def _bg_dispatch_parameter_change_notifications(project_id, new_step_num, new_ta
     if emails:
         for email, f_name in emails:
             try:
-                subject = f"DC Control - ParÃ¡metros de Proyecto Modificados: {project_id} - {p['name']}"
+                subject = f"DC Control - Parámetros de Proyecto Modificados: {project_id} - {p['name']}"
                 body = f"""<html>
 <body style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6;">
     <div style="background-color: #111827; color: white; padding: 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #C23B22;">
-        <h2 style="margin: 0; font-size: 20px;">DC Control - NotificaciÃ³n de Cambios</h2>
+        <h2 style="margin: 0; font-size: 20px;">DC Control - Notificación de Cambios</h2>
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
         <p>Hola <strong>{f_name}</strong>,</p>
-        <p>Se han modificado de manera oficial los parÃ¡metros del proyecto <strong>{project_id} - {p['name']}</strong>.</p>
+        <p>Se han modificado de manera oficial los parámetros del proyecto <strong>{project_id} - {p['name']}</strong>.</p>
         <p style="background-color: #f3f4f6; padding: 15px; border-radius: 4px; border-left: 4px solid #C23B22;">
-            <strong>Detalles de la ActualizaciÃ³n:</strong><br>
-            <span style="font-size: 15px; font-weight: bold; color: #111827;">Nueva Fecha LÃ­mite:</span> {new_target_date}<br>
+            <strong>Detalles de la Actualización:</strong><br>
+            <span style="font-size: 15px; font-weight: bold; color: #111827;">Nueva Fecha Límite:</span> {new_target_date}<br>
             <span style="font-size: 15px; font-weight: bold; color: #111827;">Paso Activo de Compuerta:</span> Paso {new_step_num}<br>
-            <span style="font-size: 15px; font-weight: bold; color: #111827;">JustificaciÃ³n / Notas:</span><br>
+            <span style="font-size: 15px; font-weight: bold; color: #111827;">Justificación / Notas:</span><br>
             <span style="color: #4b5563; font-style: italic;">"{justification or 'No especificada'}"</span>
         </p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-        <p style="font-size: 13px; color: #6b7280;">Por favor, ingresa a la aplicaciÃ³n de escritorio de DC Control para continuar.</p>
+        <p style="font-size: 13px; color: #6b7280;">Por favor, ingresa a la aplicación de escritorio de DC Control para continuar.</p>
     </div>
 </body>
 </html>"""
@@ -618,23 +618,23 @@ def _bg_dispatch_parameter_change_notifications(project_id, new_step_num, new_ta
                             "body": [
                                 {
                                     "type": "TextBlock",
-                                    "text": "Solicitud de CorrecciÃ³n Requerida",
+                                    "text": "Solicitud de Corrección Requerida",
                                     "weight": "Bolder",
                                     "size": "Medium",
                                     "color": "Attention"
                                 },
                                 {
                                     "type": "TextBlock",
-                                    "text": f"Hola {mentions_text}, se han modificado de manera oficial los parÃ¡metros del proyecto **{project_id} - {p['name']}**.",
+                                    "text": f"Hola {mentions_text}, se han modificado de manera oficial los parámetros del proyecto **{project_id} - {p['name']}**.",
                                     "wrap": True
                                 },
                                 {
                                     "type": "FactSet",
                                     "facts": [
                                         {"title": "Cliente:", "value": str(p['client'])},
-                                        {"title": "Nueva Fecha LÃ­mite:", "value": str(new_target_date)},
+                                        {"title": "Nueva Fecha Límite:", "value": str(new_target_date)},
                                         {"title": "Paso Activo:", "value": f"Paso {new_step_num}"},
-                                        {"title": "JustificaciÃ³n:", "value": str(justification or "No especificada")}
+                                        {"title": "Justificación:", "value": str(justification or "No especificada")}
                                     ]
                                 }
                             ],
@@ -674,13 +674,13 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
             return
 
         steps_meta = {
-            1: {"name": "Paso 1: Levantamiento TÃ©cnico", "desc": "Cargar la evidencia y datos tÃ©cnicos del levantamiento de la obra.", "assignee": p['assigned_ventas']},
-            2: {"name": "Paso 2: ReuniÃ³n de Seguimiento y Minuta de Trabajo", "desc": "Realizar la reuniÃ³n comercial-tÃ©cnica y subir la minuta firmada por Ventas y LÃ­der.", "assignee": f"{p['assigned_ventas']} & {p['assigned_lider']}"},
-            3: {"name": "Paso 3: CatÃ¡logo de Conceptos TÃ©cnico", "desc": "Elaborar y subir el catÃ¡logo de conceptos tÃ©cnicos de ingenierÃ­a.", "assignee": p['assigned_lider']},
-            4: {"name": "Paso 4: ElaboraciÃ³n de CotizaciÃ³n de Precios", "desc": "Formular los precios unitarios, mÃ¡rgenes de utilidad y cargar la cotizaciÃ³n final.", "assignee": p['assigned_costos']},
-            5: {"name": "Paso 5: RevisiÃ³n de CotizaciÃ³n y AprobaciÃ³n", "desc": "RevisiÃ³n a detalle de costos, alcance y margen comercial para su firma autorizada.", "assignee": "DirecciÃ³n General / Directores"},
+            1: {"name": "Paso 1: Levantamiento Técnico", "desc": "Cargar la evidencia y datos técnicos del levantamiento de la obra.", "assignee": p['assigned_ventas']},
+            2: {"name": "Paso 2: Reunión de Seguimiento y Minuta de Trabajo", "desc": "Realizar la reunión comercial-técnica y subir la minuta firmada por Ventas y Líder.", "assignee": f"{p['assigned_ventas']} & {p['assigned_lider']}"},
+            3: {"name": "Paso 3: Catálogo de Conceptos Técnico", "desc": "Elaborar y subir el catálogo de conceptos técnicos de ingeniería.", "assignee": p['assigned_lider']},
+            4: {"name": "Paso 4: Elaboración de Cotización de Precios", "desc": "Formular los precios unitarios, márgenes de utilidad y cargar la cotización final.", "assignee": p['assigned_costos']},
+            5: {"name": "Paso 5: Revisión de Cotización y Aprobación", "desc": "Revisión a detalle de costos, alcance y margen comercial para su firma autorizada.", "assignee": "Dirección General / Directores"},
             6: {"name": "Paso 6: Entrega Comercial al Cliente", "desc": "Entregar formalmente la propuesta al cliente final y registrar el monto final entregado con su evidencia.", "assignee": p['assigned_ventas']},
-            7: {"name": "Paso 7: Cierre Comercial de LicitaciÃ³n", "desc": "Especificar el resultado comercial definitivo (Ganado / Perdido / Cancelado).", "assignee": "DirecciÃ³n General"}
+            7: {"name": "Paso 7: Cierre Comercial de Licitación", "desc": "Especificar el resultado comercial definitivo (Ganado / Perdido / Cancelado).", "assignee": "Dirección General"}
         }
 
         meta = steps_meta.get(next_step_num)
@@ -740,13 +740,13 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                 body = f"""<html>
 <body style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6;">
     <div style="background-color: #111827; color: white; padding: 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #0F4C81;">
-        <h2 style="margin: 0; font-size: 20px;">DC Control - GestiÃ³n Comercial</h2>
+        <h2 style="margin: 0; font-size: 20px;">DC Control - Gestión Comercial</h2>
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
         <p>Hola <strong>{f_name}</strong>,</p>
         <p>Te informamos que se ha avanzado de etapa en el proyecto <strong>{project_id} - {p['name']}</strong> para el cliente <strong>{p['client']}</strong>.</p>
         <p style="background-color: #f3f4f6; padding: 15px; border-radius: 4px; border-left: 4px solid #0F4C81;">
-            <strong>Siguiente AcciÃ³n Requerida:</strong><br>
+            <strong>Siguiente Acción Requerida:</strong><br>
             <span style="font-size: 16px; font-weight: bold; color: #111827;">{meta['name']}</span><br>
             <span style="color: #4b5563;">{meta['desc']}</span>
         </p>
@@ -788,7 +788,7 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                             "body": [
                                 {
                                     "type": "TextBlock",
-                                    "text": "ðŸ”µ **DC Control - Siguiente Paso Habilitado**",
+                                    "text": "🔵 **DC Control - Siguiente Paso Habilitado**",
                                     "weight": "Bolder",
                                     "size": "Medium",
                                     "color": "Good"
@@ -804,7 +804,7 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                                         {"title": "Cliente:", "value": str(p['client'])},
                                         {"title": "Siguiente Tarea:", "value": str(meta['name'])},
                                         {"title": "Responsable:", "value": str(meta['assignee'])},
-                                        {"title": "Fecha LÃ­mite:", "value": str(p['target_date'] or "No definida")}
+                                        {"title": "Fecha Límite:", "value": str(p['target_date'] or "No definida")}
                                     ]
                                 }
                             ],
@@ -841,14 +841,14 @@ def _bg_dispatch_rejection_notification(project_id, step_num, justification):
 
         if step_num == 3:
             target_name = p['assigned_lider']
-            subject = f"DC Control - CatÃ¡logo Incompleto: {project_id} - {p['name']}"
-            body_text = "El catÃ¡logo de conceptos tÃ©cnicos ha sido marcado como INCOMPLETO."
-            action_label = "Corregir CatÃ¡logo"
+            subject = f"DC Control - Catálogo Incompleto: {project_id} - {p['name']}"
+            body_text = "El catálogo de conceptos técnicos ha sido marcado como INCOMPLETO."
+            action_label = "Corregir Catálogo"
         elif step_num == 5:
             target_name = p['assigned_costos']
-            subject = f"DC Control - Modificaciones de CotizaciÃ³n: {project_id} - {p['name']}"
-            body_text = "Se han solicitado modificaciones para la propuesta de cotizaciÃ³n."
-            action_label = "Modificar CotizaciÃ³n"
+            subject = f"DC Control - Modificaciones de Cotización: {project_id} - {p['name']}"
+            body_text = "Se han solicitado modificaciones para la propuesta de cotización."
+            action_label = "Modificar Cotización"
         else:
             return
 
@@ -885,14 +885,14 @@ def _bg_dispatch_rejection_notification(project_id, step_num, justification):
                 body = f"""<html>
 <body style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6;">
     <div style="background-color: #C23B22; color: white; padding: 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #111827;">
-        <h2 style="margin: 0; font-size: 20px;">DC Control - Solicitud de CorrecciÃ³n</h2>
+        <h2 style="margin: 0; font-size: 20px;">DC Control - Solicitud de Corrección</h2>
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
         <p>Hola <strong>{f_name}</strong>,</p>
         <p>{body_text}</p>
         <p style="background-color: #fdf2f2; padding: 15px; border-radius: 4px; border-left: 4px solid #C23B22;">
-            <strong>Detalles de la CorrecciÃ³n Solicitada:</strong><br>
-            <span style="font-size: 15px; color: #111827; font-weight: bold;">JustificaciÃ³n:</span><br>
+            <strong>Detalles de la Corrección Solicitada:</strong><br>
+            <span style="font-size: 15px; color: #111827; font-weight: bold;">Justificación:</span><br>
             <span style="color: #4b5563; font-style: italic;">"{justification}"</span>
         </p>
         <p><strong>Proyecto:</strong> {project_id} - {p['name']}</p>
@@ -933,22 +933,22 @@ def _bg_dispatch_rejection_notification(project_id, step_num, justification):
                             "body": [
                                 {
                                     "type": "TextBlock",
-                                    "text": "DC Control - Solicitud de CorrecciÃ³n Requerida",
+                                    "text": "DC Control - Solicitud de Corrección Requerida",
                                     "weight": "Bolder",
                                     "size": "Medium",
                                     "color": "Attention"
                                 },
                                 {
                                     "type": "TextBlock",
-                                    "text": f"Hola {mentions_text}, se han solicitado modificaciones o correcciones para la licitaciÃ³n **{project_id} - {p['name']}**.",
+                                    "text": f"Hola {mentions_text}, se han solicitado modificaciones o correcciones para la licitación **{project_id} - {p['name']}**.",
                                     "wrap": True
                                 },
                                 {
                                     "type": "FactSet",
                                     "facts": [
                                         {"title": "Cliente:", "value": str(p['client'])},
-                                        {"title": "AcciÃ³n Requerida:", "value": str(action_label)},
-                                        {"title": "JustificaciÃ³n:", "value": str(justification)}
+                                        {"title": "Acción Requerida:", "value": str(action_label)},
+                                        {"title": "Justificación:", "value": str(justification)}
                                     ]
                                 }
                             ],
@@ -972,7 +972,7 @@ AUTH_SECRET = os.getenv("DC_AUTH_SECRET", "").strip()
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").strip().lower()
 if not AUTH_SECRET:
     if ENVIRONMENT == "production":
-        raise RuntimeError("DC_AUTH_SECRET es obligatoria en producciÃ³n.")
+        raise RuntimeError("DC_AUTH_SECRET es obligatoria en producción.")
     # Local development fallback only. Production must set DC_AUTH_SECRET.
     AUTH_SECRET = "dc-control-local-development-secret-change-me"
 AUTH_TOKEN_TTL = int(os.getenv("DC_AUTH_TOKEN_TTL", "28800"))
@@ -991,7 +991,7 @@ def create_auth_token(username: str) -> str:
 
 def get_current_user(authorization: str = Header(default="")):
     if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="SesiÃ³n no autenticada")
+        raise HTTPException(status_code=401, detail="Sesión no autenticada")
     token = authorization[7:].strip()
     try:
         body, sig = token.split(".", 1)
@@ -1005,7 +1005,7 @@ def get_current_user(authorization: str = Header(default="")):
         if not username:
             raise ValueError("usuario")
     except Exception:
-        raise HTTPException(status_code=401, detail="SesiÃ³n invÃ¡lida o expirada")
+        raise HTTPException(status_code=401, detail="Sesión inválida o expirada")
 
     conn = get_db_connection()
     try:
@@ -1033,7 +1033,7 @@ def has_privilege(user, privilege: str) -> bool:
 
 def require_admin(user=Depends(get_current_user)):
     if not is_admin_or_director(user):
-        raise HTTPException(status_code=403, detail="AcciÃ³n exclusiva de AdministraciÃ³n/DirecciÃ³n")
+        raise HTTPException(status_code=403, detail="Acción exclusiva de Administración/Dirección")
     return user
 
 def _repair_docx_mojibake(data: bytes) -> bytes:
@@ -1088,10 +1088,10 @@ def require_report_access(user=Depends(get_current_user)):
 def _normalize_assignment(value):
     """
     Normaliza asignaciones para tolerar:
-    - mayÃºsculas/minÃºsculas
+    - mayúsculas/minúsculas
     - acentos
     - espacios extra
-    - mojibake UTF-8/Latin-1 (ej. L??der -> LÃ­der)
+    - mojibake UTF-8/Latin-1 (ej. Líder -> Líder)
     """
     import unicodedata
 
@@ -1131,7 +1131,7 @@ def _is_assigned(user, assigned):
     if assigned_norm in {role_norm, name_norm, username_norm}:
         return True
 
-    # Asignaciones genÃ©ricas de Ventas.
+    # Asignaciones genéricas de Ventas.
     if assigned_norm in {"agente de ventas", "ventas"}:
         return (
             "ventas" in role_norm
@@ -1139,7 +1139,7 @@ def _is_assigned(user, assigned):
             or "agente" in role_norm
         )
 
-    # Asignaciones genÃ©ricas/especÃ­ficas de LÃ­der Regional.
+    # Asignaciones genéricas/específicas de Líder Regional.
     if "lider regional" in assigned_norm:
         return (
             "lider regional" in role_norm
@@ -1170,14 +1170,14 @@ def require_project_step_access(user, project, step: int, reversal: bool = False
     if reversal:
         current_stage = int(project.get("current_stage") or 1)
 
-        # P5 -> P4 es una devoluciÃ³n de DirecciÃ³n.
-        # No se permite que un usuario con privilegio genÃ©rico de reversiÃ³n
-        # pueda modificar la cotizaciÃ³n desde este punto.
+        # P5 -> P4 es una devolución de Dirección.
+        # No se permite que un usuario con privilegio genérico de reversión
+        # pueda modificar la cotización desde este punto.
         if current_stage == 5:
             if not is_admin_or_director(user):
                 raise HTTPException(
                     status_code=403,
-                    detail="Solo DirecciÃ³n puede regresar el proyecto del Paso 5 al Paso 4"
+                    detail="Solo Dirección puede regresar el proyecto del Paso 5 al Paso 4"
                 )
             return
 
@@ -1185,9 +1185,9 @@ def require_project_step_access(user, project, step: int, reversal: bool = False
             return
 
         if not has_privilege(user, "reversal"):
-            raise HTTPException(status_code=403, detail="No tienes privilegio de reversiÃ³n")
+            raise HTTPException(status_code=403, detail="No tienes privilegio de reversión")
         if step not in (2, 4):
-            raise HTTPException(status_code=403, detail="ReversiÃ³n no permitida")
+            raise HTTPException(status_code=403, detail="Reversión no permitida")
         return
     if is_admin_or_director(user):
         return
@@ -1196,7 +1196,7 @@ def require_project_step_access(user, project, step: int, reversal: bool = False
     if step == 3 and _is_assigned(user, str(project.get("assigned_lider") or "")): return
     if step == 4 and _is_assigned(user, str(project.get("assigned_costos") or "")): return
     if step == 6 and _is_assigned(user, str(project.get("assigned_ventas") or "")): return
-    raise HTTPException(status_code=403, detail=f"No tienes autorizaciÃ³n para ejecutar el Paso {step}")
+    raise HTTPException(status_code=403, detail=f"No tienes autorización para ejecutar el Paso {step}")
 
 # Model Schema Definitions
 class LoginRequest(BaseModel):
@@ -1335,7 +1335,7 @@ def create_client(req: ClientCreateRequest, current_user=Depends(require_admin))
                 cursor.execute("UPDATE clients SET active = 1 WHERE id = %s", (existing["id"],))
                 conn.commit()
                 return {"id": existing["id"], "name": existing["name"], "active": 1}
-            raise HTTPException(status_code=409, detail="Ese cliente ya existe en el catÃ¡logo.")
+            raise HTTPException(status_code=409, detail="Ese cliente ya existe en el catálogo.")
         cursor.execute(
             "INSERT INTO clients (name, active, created_at) VALUES (%s, 1, %s) RETURNING id, name, active",
             (name, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -1523,7 +1523,7 @@ def get_dashboard_summary(current_user=Depends(get_current_user)):
 
         # ============================================================
         # COTIZADO VS GANADO
-        # Solo los datos mÃ­nimos necesarios para la grÃ¡fica.
+        # Solo los datos mínimos necesarios para la gráfica.
         # ============================================================
         cursor.execute("""
             SELECT
@@ -1641,20 +1641,20 @@ def get_dashboard_summary(current_user=Depends(get_current_user)):
 def create_project(req: CreateProjectRequest, current_user=Depends(require_admin)):
     # Generates next project ID matching logic of generate_next_project_id
     year_month = datetime.now().strftime("%Y%m")
-    region_auto = ESTADOS_MEXICO.get(req.state, "LÃ­der Regional - Sur")
+    region_auto = ESTADOS_MEXICO.get(req.state, "Líder Regional - Sur")
     zone_auto = "S" if "Sur" in region_auto else "N"
     prefix = f"DCC-{year_month}-{zone_auto}-"
 
     client_name = str(req.client or '').strip()
     if not client_name:
-        raise HTTPException(status_code=400, detail='Debes seleccionar un cliente del catÃ¡logo.')
+        raise HTTPException(status_code=400, detail='Debes seleccionar un cliente del catálogo.')
     conn = get_db_connection()
     try:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("SELECT id FROM clients WHERE LOWER(name) = LOWER(%s) AND active = 1", (client_name,))
         if not cursor.fetchone():
-            raise HTTPException(status_code=400, detail="El cliente seleccionado no existe o estÃ¡ inactivo en el catÃ¡logo.")
-        # Folios histÃ³ricos: nunca reutilizar un folio aunque la licitaciÃ³n haya sido eliminada.
+            raise HTTPException(status_code=400, detail="El cliente seleccionado no existe o está inactivo en el catálogo.")
+        # Folios históricos: nunca reutilizar un folio aunque la licitación haya sido eliminada.
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS project_folio_registry (
                 folio TEXT PRIMARY KEY,
@@ -1695,7 +1695,7 @@ def create_project(req: CreateProjectRequest, current_user=Depends(require_admin
             leader_db = cursor.fetchone()
             assigned_leader = leader_db['full_name'] if leader_db else region_auto
 
-        final_ventas = assigned_leader if req.comm_responsibility == "LÃ­der Regional" else req.assigned_ventas
+        final_ventas = assigned_leader if req.comm_responsibility == "Líder Regional" else req.assigned_ventas
 
         init_stage = 7 if req.skip_to_cierre else 1
         s1 = 1 if req.skip_to_cierre else 0
@@ -1736,7 +1736,7 @@ def create_project(req: CreateProjectRequest, current_user=Depends(require_admin
                 date.today().strftime("%Y-%m-%d"), req.target_date, s1, s2, s2, s2, s3, s4, s5, s6, s6_date
             ))
         conn.commit()
-        log_audit(final_code, "SISTEMA", "Admin/Director", f"CreÃ³ licitaciÃ³n con cÃ³digo {final_code} y carpeta SharePoint {sp_folder_url}")
+        log_audit(final_code, "SISTEMA", "Admin/Director", f"Creó licitación con código {final_code} y carpeta SharePoint {sp_folder_url}")
         return {"success": True, "id": final_code, "sharepoint_folder_url": sp_folder_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1781,7 +1781,7 @@ def edit_project(proj_id: str, req: EditProjectRequest, current_user=Depends(req
 
         # Determine sales assignment
         assigned_leader_val = req.assigned_lider if req.assigned_lider else p_details['assigned_lider']
-        edit_ventas_val = assigned_leader_val if req.comm_responsibility == "LÃ­der Regional" else req.assigned_ventas
+        edit_ventas_val = assigned_leader_val if req.comm_responsibility == "Líder Regional" else req.assigned_ventas
 
         cursor.execute('''
             UPDATE projects
@@ -1806,7 +1806,7 @@ def edit_project(proj_id: str, req: EditProjectRequest, current_user=Depends(req
         dispatch_parameter_change_notifications(proj_id, req.current_stage, req.target_date, req.justification)
         audit_name = current_user.get("full_name") or current_user.get("username") or "Usuario"
         audit_role = current_user.get("role") or "Admin/Director"
-        log_audit(proj_id, audit_name, audit_role, f"ModificÃ³ parÃ¡metros (Etapa: {req.current_stage}, Prioridad: {req.priority}, LÃ­mite: {req.target_date})", comments=req.justification if req.justification else None)
+        log_audit(proj_id, audit_name, audit_role, f"Modificó parámetros (Etapa: {req.current_stage}, Prioridad: {req.priority}, Límite: {req.target_date})", comments=req.justification if req.justification else None)
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1843,15 +1843,15 @@ def delete_project(proj_id: str, current_user=Depends(require_admin)):
         conn.commit()
         audit_name = current_user.get("full_name") or current_user.get("username") or "Usuario"
         audit_role = current_user.get("role") or "Admin/Director"
-        log_audit(proj_id, audit_name, audit_role, "EliminÃ³ licitaciÃ³n y sus archivos asociados.")
+        log_audit(proj_id, audit_name, audit_role, "Eliminó licitación y sus archivos asociados.")
 
         return {
             "success": True,
             "sharepoint_deleted": sp_ok,
             "sharepoint_folder_deleted": folder_deleted,
             "message": folder_message or (
-                "LicitaciÃ³n eliminada. La carpeta de SharePoint se conservÃ³ porque contiene archivos."
-                if sp_ok and not folder_deleted else "LicitaciÃ³n eliminada correctamente."
+                "Licitación eliminada. La carpeta de SharePoint se conservó porque contiene archivos."
+                if sp_ok and not folder_deleted else "Licitación eliminada correctamente."
             )
         }
     except Exception as e:
@@ -1912,7 +1912,7 @@ async def upload_file(
     if not ms_file_id or not ms_web_url:
         raise HTTPException(
             status_code=502,
-            detail="SharePoint no devolviÃ³ la identificaciÃ³n o URL del archivo cargado"
+            detail="SharePoint no devolvió la identificación o URL del archivo cargado"
         )
 
     conn = get_db_connection()
@@ -1924,7 +1924,7 @@ async def upload_file(
         ''', (project_id, step_name, file.filename, file_path, uploaded_by, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), None, ms_file_id, ms_web_url))
         conn.commit()
 
-        # Si la evidencia de P2 llega despuÃ©s de ambas confirmaciones, libera automÃ¡ticamente P2.
+        # Si la evidencia de P2 llega después de ambas confirmaciones, libera automáticamente P2.
         if step_name == "Paso 2":
             cursor.execute("SELECT step2_ventas_done, step2_lider_done FROM projects WHERE id = %s", (project_id,))
             p2_flags = cursor.fetchone()
@@ -1932,7 +1932,7 @@ async def upload_file(
                 cursor.execute("UPDATE projects SET step2_completed = 1 WHERE id = %s", (project_id,))
                 conn.commit()
 
-        log_audit(project_id, uploaded_by, current_user.get("role") or "Usuario", f"SubiÃ³ archivo {file.filename} en compuerta {step_name}")
+        log_audit(project_id, uploaded_by, current_user.get("role") or "Usuario", f"Subió archivo {file.filename} en compuerta {step_name}")
         return {"success": True, "sharepoint_web_url": ms_web_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -1973,7 +1973,7 @@ def download_file(upload_id: int, current_user=Depends(get_current_user)):
                 pass
 
         if file_bytes is None:
-            raise HTTPException(status_code=404, detail="El archivo no estÃ¡ disponible en SharePoint ni en el respaldo histÃ³rico de la base de datos")
+            raise HTTPException(status_code=404, detail="El archivo no está disponible en SharePoint ni en el respaldo histórico de la base de datos")
 
         return Response(content=file_bytes, media_type="application/octet-stream", headers={"Content-Disposition": f"attachment; filename={row['filename']}"})
     finally:
@@ -2008,7 +2008,7 @@ def delete_uploaded_file(upload_id: int, current_user=Depends(get_current_user))
 
         cursor.execute("DELETE FROM uploads WHERE id = %s", (upload_id,))
         conn.commit()
-        log_audit(f['project_id'], current_user.get("full_name") or current_user.get("username") or "Usuario", current_user.get("role") or "Usuario", f"EliminÃ³ archivo {f['filename']} del paso {f['step_name']}")
+        log_audit(f['project_id'], current_user.get("full_name") or current_user.get("username") or "Usuario", current_user.get("role") or "Usuario", f"Eliminó archivo {f['filename']} del paso {f['step_name']}")
         return {"success": True}
     except HTTPException:
         raise
@@ -2042,7 +2042,7 @@ def update_final_amount(proj_id: str, req: FinalAmountRequest, current_user=Depe
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Solo Ventas asignado o DirecciÃ³n puede modificar el monto final cotizado en el Paso 6"
+                detail="Solo Ventas asignado o Dirección puede modificar el monto final cotizado en el Paso 6"
             )
 
         cursor.execute("UPDATE projects SET final_amount = %s WHERE id = %s", (amount, proj_id))
@@ -2050,7 +2050,7 @@ def update_final_amount(proj_id: str, req: FinalAmountRequest, current_user=Depe
 
         user_name = current_user.get("full_name") or current_user.get("username") or "Usuario"
         user_role = current_user.get("role") or "Usuario"
-        log_audit(proj_id, user_name, user_role, f"ActualizÃ³ el monto final cotizado a ${amount:,.2f} en el Paso 6")
+        log_audit(proj_id, user_name, user_role, f"Actualizó el monto final cotizado a ${amount:,.2f} en el Paso 6")
         return {"success": True, "final_amount": amount}
     except HTTPException:
         raise
@@ -2264,14 +2264,14 @@ def confirm_step2_reunion(project_id: str = Form(...), user_role: str = Form(...
         if int(p.get('current_stage') or 1) != 2:
             raise HTTPException(
                 status_code=400,
-                detail="La confirmaciÃ³n de P2 solo puede realizarse cuando el proyecto estÃ¡ en el Paso 2"
+                detail="La confirmación de P2 solo puede realizarse cuando el proyecto está en el Paso 2"
             )
 
         name_now = current_user.get("full_name") or current_user.get("username")
         is_dir = is_admin_or_director(current_user)
 
-        # P2 es una confirmaciÃ³n dual: cada persona solo puede confirmar
-        # su propia parte y Ãºnicamente una vez.
+        # P2 es una confirmación dual: cada persona solo puede confirmar
+        # su propia parte y únicamente una vez.
         is_lider = _is_assigned(
             current_user,
             str(p.get('assigned_lider') or '')
@@ -2284,7 +2284,7 @@ def confirm_step2_reunion(project_id: str = Form(...), user_role: str = Form(...
         if not (is_dir or is_lider or is_ventas):
             raise HTTPException(
                 status_code=403,
-                detail="No tienes autorizaciÃ³n para confirmar el Paso 2"
+                detail="No tienes autorización para confirmar el Paso 2"
             )
 
         # Director/Admin conserva su modo especial.
@@ -2299,7 +2299,7 @@ def confirm_step2_reunion(project_id: str = Form(...), user_role: str = Form(...
                 if p.get('step2_ventas_done') == 1:
                     raise HTTPException(
                         status_code=400,
-                        detail="La confirmaciÃ³n de Ventas para el Paso 2 ya fue realizada"
+                        detail="La confirmación de Ventas para el Paso 2 ya fue realizada"
                     )
 
                 cursor.execute(
@@ -2311,7 +2311,7 @@ def confirm_step2_reunion(project_id: str = Form(...), user_role: str = Form(...
                 if p.get('step2_lider_done') == 1:
                     raise HTTPException(
                         status_code=400,
-                        detail="La confirmaciÃ³n del LÃ­der Regional para el Paso 2 ya fue realizada"
+                        detail="La confirmación del Líder Regional para el Paso 2 ya fue realizada"
                     )
 
                 cursor.execute(
@@ -2334,7 +2334,7 @@ def confirm_step2_reunion(project_id: str = Form(...), user_role: str = Form(...
 
             if both_confirmed:
                 # Cualquier archivo cargado en Paso 2 cuenta como
-                # evidencia/minuta, sin importar extensiÃ³n o nombre.
+                # evidencia/minuta, sin importar extensión o nombre.
                 cursor.execute(
                     "SELECT COUNT(*) FROM uploads WHERE project_id = %s AND step_name = %s",
                     (project_id, "Paso 2")
@@ -2358,7 +2358,7 @@ def confirm_step2_reunion(project_id: str = Form(...), user_role: str = Form(...
             project_id,
             name_now,
             current_user.get("role") or "Usuario",
-            "ConfirmÃ³ reuniÃ³n comercial tÃ©cnica para el Paso 2"
+            "Confirmó reunión comercial técnica para el Paso 2"
         )
 
         return {"success": True}
@@ -2385,7 +2385,7 @@ def close_project(req: CierreRequest, current_user=Depends(require_admin)):
         conn.commit()
         u_name = current_user.get("full_name") or current_user.get("username")
         u_role = current_user.get("role") or "Admin/Director"
-        log_audit(req.project_id, u_name, u_role, f"CerrÃ³ licitaciÃ³n comercial como '{req.status}' con desfase de {req.lose_percentage_gap}%")
+        log_audit(req.project_id, u_name, u_role, f"Cerró licitación comercial como '{req.status}' con desfase de {req.lose_percentage_gap}%")
         return {"success": True}
     finally:
         put_db_connection(conn)
@@ -2430,10 +2430,10 @@ def create_user(req: CreateUserRequest, current_user=Depends(require_admin)):
         cursor = conn.cursor()
         cursor.execute("INSERT INTO users (username, password, full_name, role, email, privileges) VALUES (%s, %s, %s, %s, %s, %s)", (req.username, hash_password(req.password), req.full_name, req.role, req.email, req.privileges or "dashboards,reports,projects"))
         conn.commit()
-        log_audit("SISTEMA", current_user.get("full_name") or current_user.get("username"), current_user.get("role"), f"CreÃ³ nuevo usuario colaborador: {req.username}")
+        log_audit("SISTEMA", current_user.get("full_name") or current_user.get("username"), current_user.get("role"), f"Creó nuevo usuario colaborador: {req.username}")
         return {"success": True}
     except Exception as e:
-        raise HTTPException(status_code=400, detail="El nombre de usuario ya estÃ¡ registrado")
+        raise HTTPException(status_code=400, detail="El nombre de usuario ya está registrado")
     finally:
         put_db_connection(conn)
 
@@ -2449,7 +2449,7 @@ def delete_user(username: str, current_user=Depends(require_admin)):
         conn.commit()
         audit_name = current_user.get("full_name") or current_user.get("username") or "Usuario"
         audit_role = current_user.get("role") or "Admin/Director"
-        log_audit("SISTEMA", audit_name, audit_role, f"EliminÃ³ cuenta de usuario colaborador: {username}")
+        log_audit("SISTEMA", audit_name, audit_role, f"Eliminó cuenta de usuario colaborador: {username}")
         return {"success": True}
     finally:
         put_db_connection(conn)
@@ -2472,7 +2472,7 @@ def update_profile(username: str, req: UserProfileRequest, current_user=Depends(
         conn.commit()
         audit_name = current_user.get("full_name") or current_user.get("username") or "Usuario"
         audit_role = current_user.get("role") or "Usuario"
-        log_audit("SISTEMA", audit_name, audit_role, f"ActualizÃ³ sus datos de perfil de usuario ({username})")
+        log_audit("SISTEMA", audit_name, audit_role, f"Actualizó sus datos de perfil de usuario ({username})")
         return {"success": True}
     finally:
         put_db_connection(conn)
@@ -2532,7 +2532,7 @@ def test_ms_connection(current_user=Depends(require_admin)):
         _, drive_id = get_sharepoint_drive_details()
         if drive_id:
             return {"success": True, "drive_id": drive_id}
-        return {"success": False, "error": "No se encontrÃ³ el SharePoint Drive ID."}
+        return {"success": False, "error": "No se encontró el SharePoint Drive ID."}
     except Exception as ex:
         return {"success": False, "error": str(ex)}
 
@@ -2542,21 +2542,21 @@ def test_smtp_connection(admin_email: str = Form(...), current_user=Depends(requ
         body_html = """<html>
 <body style="font-family: Arial, sans-serif; color: #333333;">
     <div style="background-color: #111827; color: white; padding: 15px 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #0F4C81;">
-        <h2 style="margin: 0; font-size: 18px;">ValidaciÃ³n de correo - DC Control</h2>
+        <h2 style="margin: 0; font-size: 18px;">Validación de correo - DC Control</h2>
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
-        <p>Â¡Hola!</p>
+        <p>¡Hola!</p>
         <p>Este es un correo de prueba enviado desde la <strong>DC Control App v1.0.0</strong>.</p>
-        <p>El envÃ­o mediante <strong>Microsoft Graph</strong> ha sido validado con Ã©xito.</p>
+        <p>El envío mediante <strong>Microsoft Graph</strong> ha sido validado con éxito.</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;">
-        <p style="font-size: 11px; color: #6b7280; text-align: center;">DC Control S.A. de C.V. â€¢ GestiÃ³n Comercial</p>
+        <p style="font-size: 11px; color: #6b7280; text-align: center;">DC Control S.A. de C.V. • Gestión Comercial</p>
     </div>
 </body>
 </html>"""
 
         result = send_ms_graph_email(
             to_emails=admin_email,
-            subject="DC Control - ValidaciÃ³n de correo exitosa",
+            subject="DC Control - Validación de correo exitosa",
             body_html=body_html
         )
 
@@ -2707,14 +2707,14 @@ def _generate_executive_report_docx():
     run_hdr.bold = True
     run_hdr.font.size = Pt(10.5)
     run_hdr.font.color.rgb = RGBColor(17, 24, 39)
-    run_sub = p_text.add_run(f"Reporte Ejecutivo de DirecciÃ³n: Control de Cotizaciones\nGenerado el: {date.today().strftime('%Y-%m-%d')} | Confidencial")
+    run_sub = p_text.add_run(f"Reporte Ejecutivo de Dirección: Control de Cotizaciones\nGenerado el: {date.today().strftime('%Y-%m-%d')} | Confidencial")
     run_sub.font.size = Pt(8.5)
     run_sub.font.color.rgb = RGBColor(107, 114, 128)
 
     doc.add_paragraph().paragraph_format.space_after = Pt(12)
 
     title_p = doc.add_paragraph()
-    title_run = title_p.add_run("REPORTE EJECUTIVO GLOBAL DE DIRECCIÃ“N Y SLA")
+    title_run = title_p.add_run("REPORTE EJECUTIVO GLOBAL DE DIRECCIÓN Y SLA")
     title_run.bold = True
     title_run.font.size = Pt(16)
     title_run.font.color.rgb = RGBColor(15, 76, 129)
@@ -2727,7 +2727,7 @@ def _generate_executive_report_docx():
         if not df_active.empty:
             df_active['_target_sort'] = pd.to_datetime(df_active['target_date'], errors='coerce')
             df_active = df_active.sort_values(['_target_sort', 'id'], ascending=[True, True], na_position='last')
-        steps_short = {1: "Levantamiento", 2: "Minuta", 3: "CatÃ¡logo", 4: "CotizaciÃ³n", 5: "RevisiÃ³n", 6: "Entrega", 7: "Cierre"}
+        steps_short = {1: "Levantamiento", 2: "Minuta", 3: "Catálogo", 4: "Cotización", 5: "Revisión", 6: "Entrega", 7: "Cierre"}
 
         # General KPIs Metrics Paragraph
         doc.add_paragraph().paragraph_format.space_after = Pt(8)
@@ -2744,13 +2744,13 @@ def _generate_executive_report_docx():
         effect = (won_count / (won_count + lost_count) * 100) if (won_count + lost_count) > 0 else 0.0
 
         p_kpis = doc.add_paragraph()
-        p_kpis.add_run(f"â€¢ Total de Licitaciones Registradas: ").bold = True
+        p_kpis.add_run(f"• Total de Licitaciones Registradas: ").bold = True
         p_kpis.add_run(f"{total_projs}\n")
-        p_kpis.add_run(f"â€¢ Cotizaciones Activas en Proceso: ").bold = True
+        p_kpis.add_run(f"• Cotizaciones Activas en Proceso: ").bold = True
         p_kpis.add_run(f"{active_count}\n")
-        p_kpis.add_run(f"â€¢ Monto Total Cotizado en Pipeline: ").bold = True
+        p_kpis.add_run(f"• Monto Total Cotizado en Pipeline: ").bold = True
         p_kpis.add_run(f"${total_amount:,.2f}\n")
-        p_kpis.add_run(f"â€¢ Efectividad Comercial de Cierre: ").bold = True
+        p_kpis.add_run(f"• Efectividad Comercial de Cierre: ").bold = True
         p_kpis.add_run(f"{effect:.1f}% ({won_count} ganadas, {lost_count} perdidas)")
 
         # Section 2: Active Pipeline Table
@@ -2766,7 +2766,7 @@ def _generate_executive_report_docx():
             tbl_p = doc.add_table(rows=len(df_active) + 1, cols=6)
             tbl_p.alignment = WD_TABLE_ALIGNMENT.CENTER
             tbl_p.autofit = False
-            headers_p = ["Folio ID", "Obra / Proyecto", "Cliente", "Paso Atorado", "Fecha LÃ­mite", "Monto Estimado"]
+            headers_p = ["Folio ID", "Obra / Proyecto", "Cliente", "Paso Atorado", "Fecha Límite", "Monto Estimado"]
             widths_p = [Inches(1.0), Inches(1.8), Inches(1.5), Inches(1.2), Inches(1.2), Inches(1.1)]
 
             # Header Row Styling
@@ -2814,12 +2814,12 @@ def _generate_executive_report_docx():
 
         commercial_pending = df_p[(df_p['status'] == 'En Proceso') & (df_p['current_stage'].isin([6, 7]))].copy()
         if commercial_pending.empty:
-            doc.add_paragraph("No hay cotizaciones en seguimiento/cierre comercial pendientes de definiciÃ³n.")
+            doc.add_paragraph("No hay cotizaciones en seguimiento/cierre comercial pendientes de definición.")
         else:
             commercial_pending['_target_sort'] = pd.to_datetime(commercial_pending['target_date'], errors='coerce')
             commercial_pending = commercial_pending.sort_values(['_target_sort', 'id'], ascending=[True, True], na_position='last')
             tbl_c = doc.add_table(rows=len(commercial_pending) + 1, cols=6)
-            headers_c = ["Folio", "Proyecto", "Cliente", "Etapa", "Fecha lÃ­mite", "Monto final"]
+            headers_c = ["Folio", "Proyecto", "Cliente", "Etapa", "Fecha límite", "Monto final"]
             widths_c = [Inches(0.9), Inches(1.8), Inches(1.5), Inches(1.1), Inches(1.2), Inches(1.2)]
             for j, h in enumerate(headers_c):
                 cell = tbl_c.rows[0].cells[j]
@@ -2835,13 +2835,13 @@ def _generate_executive_report_docx():
                         f"${float(row_data.get('final_amount',0) or 0):,.2f}"]
                 for j, val in enumerate(vals):
                     tbl_c.rows[i+1].cells[j].paragraphs[0].add_run(val)
-            doc.add_paragraph("Estas licitaciones estÃ¡n en P6/P7 y todavÃ­a no tienen resultado comercial definitivo.")
+            doc.add_paragraph("Estas licitaciones están en P6/P7 y todavía no tienen resultado comercial definitivo.")
 
-        # Section 4: SLA Warnings Table (Proyectos mÃ¡s prÃ³ximos a vencer o vencidos)
+        # Section 4: SLA Warnings Table (Proyectos más próximos a vencer o vencidos)
 
         doc.add_paragraph().paragraph_format.space_after = Pt(12)
         warn_hdr = doc.add_paragraph()
-        warn_hdr.add_run("4. ALERTAS DE ENTREGA DE LICITACIONES PROXIMAS (SEMÃFORO DE SLA)\n").bold = True
+        warn_hdr.add_run("4. ALERTAS DE ENTREGA DE LICITACIONES PROXIMAS (SEMÁFORO DE SLA)\n").bold = True
         warn_hdr.runs[0].font.size = Pt(12)
         warn_hdr.runs[0].font.color.rgb = RGBColor(17, 24, 39)
 
@@ -2865,12 +2865,12 @@ def _generate_executive_report_docx():
         warnings = sorted(warnings, key=lambda w: w['days'])[:5]
 
         if not warnings:
-            doc.add_paragraph("No hay licitaciones crÃ­ticas prÃ³ximas a vencer.")
+            doc.add_paragraph("No hay licitaciones críticas próximas a vencer.")
         else:
             tbl_w = doc.add_table(rows=len(warnings) + 1, cols=5)
             tbl_w.alignment = WD_TABLE_ALIGNMENT.CENTER
             tbl_w.autofit = False
-            headers_w = ["Proyecto / Obra", "Paso Atorado", "Responsable", "DÃ­as Restantes", "Semaforo SLA"]
+            headers_w = ["Proyecto / Obra", "Paso Atorado", "Responsable", "Días Restantes", "Semaforo SLA"]
             widths_w = [Inches(2.5), Inches(1.2), Inches(1.5), Inches(1.1), Inches(1.2)]
 
             # Header Row
@@ -2894,10 +2894,10 @@ def _generate_executive_report_docx():
                 w_name = f"{w['id']} - {w['name']}"
                 w_stage = f"Paso {w['stage']}"
                 w_resp = w['responsible'] or 'Sin asignar'
-                w_days = f"{w['days']} dÃ­as" if w['days'] >= 0 else f"RETRASADO ({abs(w['days'])} d)"
+                w_days = f"{w['days']} días" if w['days'] >= 0 else f"RETRASADO ({abs(w['days'])} d)"
                 
                 if w['days'] < 0:
-                    w_tag = "CRÃTICO (VENCIDO)"
+                    w_tag = "CRÍTICO (VENCIDO)"
                     text_color = RGBColor(194, 59, 34) # Red
                 elif w['days'] <= 7:
                     w_tag = "URGENTE"
@@ -2937,7 +2937,7 @@ def _generate_executive_report_docx():
         # Draw to document
         doc.add_paragraph().paragraph_format.space_after = Pt(12)
         h_graphs = doc.add_paragraph()
-        h_graphs_run = h_graphs.add_run("5. DIAGNÃ“STICO GRÃFICO GENERAL DE CUELLOS DE BOTELLA")
+        h_graphs_run = h_graphs.add_run("5. DIAGNÓSTICO GRÁFICO GENERAL DE CUELLOS DE BOTELLA")
         h_graphs_run.bold = True
         h_graphs_run.font.size = Pt(12)
         h_graphs_run.font.color.rgb = RGBColor(17, 24, 39)
@@ -2966,21 +2966,21 @@ def _generate_executive_report_docx():
         urgent_count = sum(1 for w in warnings if 0 <= w['days'] <= 7)
         pending_count = len(commercial_pending)
 
-        sug_p.add_run("â€¢ Resumen de efectividad comercial: ").bold = True
-        sug_p.add_run(f"Actualmente la efectividad de cierre es {effect_txt}. El cÃ¡lculo considera Ãºnicamente oportunidades con resultado Ganado o Perdido.\n")
+        sug_p.add_run("• Resumen de efectividad comercial: ").bold = True
+        sug_p.add_run(f"Actualmente la efectividad de cierre es {effect_txt}. El cálculo considera únicamente oportunidades con resultado Ganado o Perdido.\n")
         if bottleneck_stage:
             stage_label = steps_short.get(int(bottleneck_stage), f"Paso {int(bottleneck_stage)}")
-            sug_p.add_run("â€¢ ConcentraciÃ³n del pipeline: ").bold = True
-            sug_p.add_run(f"El mayor nÃºmero de cotizaciones activas se concentra en {stage_label}, con {int(stage_counts[bottleneck_stage])} proyecto(s).\n")
-        sug_p.add_run("â€¢ Seguimiento comercial pendiente: ").bold = True
-        sug_p.add_run(f"Hay {pending_count} cotizaciÃ³n(es) en P6/P7 sin resultado comercial definitivo.\n")
-        sug_p.add_run("â€¢ Prioridad por SLA: ").bold = True
-        sug_p.add_run(f"Se identifican {overdue_count} oportunidad(es) vencida(s) y {urgent_count} con fecha lÃ­mite dentro de los prÃ³ximos 7 dÃ­as. El listado de alertas estÃ¡ ordenado por urgencia.\n")
+            sug_p.add_run("• Concentración del pipeline: ").bold = True
+            sug_p.add_run(f"El mayor número de cotizaciones activas se concentra en {stage_label}, con {int(stage_counts[bottleneck_stage])} proyecto(s).\n")
+        sug_p.add_run("• Seguimiento comercial pendiente: ").bold = True
+        sug_p.add_run(f"Hay {pending_count} cotización(es) en P6/P7 sin resultado comercial definitivo.\n")
+        sug_p.add_run("• Prioridad por SLA: ").bold = True
+        sug_p.add_run(f"Se identifican {overdue_count} oportunidad(es) vencida(s) y {urgent_count} con fecha límite dentro de los próximos 7 días. El listado de alertas está ordenado por urgencia.\n")
         won_states = df_p[df_p['status'] == 'Ganado']['state'].fillna('Sin estado').value_counts()
         if not won_states.empty:
             top_won_state = won_states.index[0]
-            sug_p.add_run("â€¢ DistribuciÃ³n de cierres ganados: ").bold = True
-            sug_p.add_run(f"La mayor concentraciÃ³n de licitaciones ganadas por estado se encuentra en {top_won_state}; se presenta como dato descriptivo para el anÃ¡lisis comercial.\n")
+            sug_p.add_run("• Distribución de cierres ganados: ").bold = True
+            sug_p.add_run(f"La mayor concentración de licitaciones ganadas por estado se encuentra en {top_won_state}; se presenta como dato descriptivo para el análisis comercial.\n")
 
     bio = io.BytesIO()
     doc.save(bio)
@@ -3031,7 +3031,7 @@ def email_executive_report(current_user=Depends(require_report_access)):
         <p>Adjunto a este correo electr""" + chr(243) + """nico se encuentra el <strong>Reporte Ejecutivo Global del """ + chr(225) + """rea comercial</strong> actualizado al d""" + chr(237) + """a de hoy, <strong>{report_date}</strong>.</p>
         <p>Estos reportes incluyen los KPIs y m""" + chr(233) + """tricas necesarias para su evaluaci""" + chr(243) + """n. Tambi""" + chr(233) + """n contienen el resumen general de las m""" + chr(233) + """tricas clave, el estatus detallado de la l""" + chr(237) + """nea activa de cotizaciones, y las alertas de entrega cr""" + chr(237) + """ticas para eficientar los procesos de entrega y gesti""" + chr(243) + """n de cotizaciones.</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-        <p style="font-size: 11px; color: #6b7280; text-align: center;">DC Control S.A. de C.V. ? Gesti""" + chr(243) + """n Comercial</p>
+        <p style="font-size: 11px; color: #6b7280; text-align: center;">DC Control S.A. de C.V. • Gestión Comercial</p>
     </div>
 </body>
 </html>"""
@@ -3118,7 +3118,7 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
     run_hdr.bold = True
     run_hdr.font.size = Pt(10)
     run_hdr.font.color.rgb = RGBColor(17, 24, 39)
-    run_sub = p_text.add_run(f"Dossier TÃ©cnico-Comercial Completo: {p['id']}\nGenerado el: {date.today().strftime('%Y-%m-%d')} | CONFIDENCIAL")
+    run_sub = p_text.add_run(f"Dossier Técnico-Comercial Completo: {p['id']}\nGenerado el: {date.today().strftime('%Y-%m-%d')} | CONFIDENCIAL")
     run_sub.font.size = Pt(8.5)
     run_sub.font.color.rgb = RGBColor(107, 114, 128)
 
@@ -3133,7 +3133,7 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
 
     # 1. Resumen General
     h1 = doc.add_paragraph()
-    h1_run = h1.add_run("1. Resumen General de la LicitaciÃ³n")
+    h1_run = h1.add_run("1. Resumen General de la Licitación")
     h1_run.bold = True
     h1_run.font.size = Pt(12)
     h1_run.font.color.rgb = RGBColor(15, 76, 129)
@@ -3142,11 +3142,11 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
         ("Folio del Proyecto", str(p['id'])),
         ("Obra / Proyecto", str(p['name'])),
         ("Cliente", str(p['client'])),
-        ("Estado de la RepÃºblica", f"{p['state']} ({p['zone']})"),
+        ("Estado de la República", f"{p['state']} ({p['zone']})"),
         ("Agente de Ventas Responsable", str(p['assigned_ventas'])),
-        ("LÃ­der Regional Responsable", str(p['assigned_lider'])),
+        ("Líder Regional Responsable", str(p['assigned_lider'])),
         ("Analista de Costos Asignado", str(p['assigned_costos'])),
-        ("Prioridad de AtenciÃ³n", str(p['priority'])),
+        ("Prioridad de Atención", str(p['priority'])),
         ("Monto Final Cotizado", f"${p['final_amount']:,.2f}"),
         ("Estatus del Proceso", str(p['status'])),
         ("Compuerta de Proceso Activa", f"Paso {p['current_stage']} de 7"),
@@ -3178,30 +3178,30 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
                 shd.set(qn('w:val'), 'clear')
                 cell._tc.get_or_add_tcPr().append(shd)
 
-    # 2. Estatus de ValidaciÃ³n de Compuertas Secuenciales
+    # 2. Estatus de Validación de Compuertas Secuenciales
     doc.add_paragraph().paragraph_format.space_after = Pt(12)
     h2 = doc.add_paragraph()
-    h2_run = h2.add_run("2. Estatus de ValidaciÃ³n de Compuertas Secuenciales")
+    h2_run = h2.add_run("2. Estatus de Validación de Compuertas Secuenciales")
     h2_run.bold = True
     h2_run.font.size = Pt(12)
     h2_run.font.color.rgb = RGBColor(15, 76, 129)
 
-    doc.add_paragraph("Este proyecto se rige por un esquema secuencial de 7 compuertas obligatorias. A continuaciÃ³n se reporta la validaciÃ³n de cada hito:")
+    doc.add_paragraph("Este proyecto se rige por un esquema secuencial de 7 compuertas obligatorias. A continuación se reporta la validación de cada hito:")
 
     gates_details = [
-        ("Compuerta 1: Levantamiento TÃ©cnico de Obra (P1)", "Validado" if p['step1_completed'] == 1 else "Pendiente", "Estudio de viabilidad inicial y alcances de la obra."),
-        ("Compuerta 2: Minuta de Trabajo y ConfirmaciÃ³n (P2)", "Validado" if p['step2_completed'] == 1 else "Pendiente", "AlineaciÃ³n comercial. ConfirmaciÃ³n de Ventas y LÃ­der Regional."),
-        ("Compuerta 3: CatÃ¡logo de Conceptos e IngenierÃ­a (P3)", "Validado" if p['step3_completed'] == 1 else "Pendiente", "Estructura tÃ©cnica de conceptos de obra."),
-        ("Compuerta 4: CotizaciÃ³n de Precios y Utilidades (P4)", "Validado" if p['step4_completed'] == 1 else "Pendiente", "ElaboraciÃ³n de costos unitarios y utilidades."),
-        ("Compuerta 5: AprobaciÃ³n de DirecciÃ³n General (P5)", "Validado" if p['step5_completed'] == 1 else "Pendiente", "RevisiÃ³n ejecutiva y autorizaciÃ³n de propuesta."),
-        ("Compuerta 6: Entrega Oficial al Cliente (P6)", "Validado" if p['step6_completed'] == 1 else "Pendiente", "Entrega fÃ­sica/digital formal de la propuesta tÃ©cnica."),
-        ("Compuerta 7: Cierre Comercial de LicitaciÃ³n (P7)", p['status'], "Dictamen final del proyecto (Ganado / Perdido).")
+        ("Compuerta 1: Levantamiento Técnico de Obra (P1)", "Validado" if p['step1_completed'] == 1 else "Pendiente", "Estudio de viabilidad inicial y alcances de la obra."),
+        ("Compuerta 2: Minuta de Trabajo y Confirmación (P2)", "Validado" if p['step2_completed'] == 1 else "Pendiente", "Alineación comercial. Confirmación de Ventas y Líder Regional."),
+        ("Compuerta 3: Catálogo de Conceptos e Ingeniería (P3)", "Validado" if p['step3_completed'] == 1 else "Pendiente", "Estructura técnica de conceptos de obra."),
+        ("Compuerta 4: Cotización de Precios y Utilidades (P4)", "Validado" if p['step4_completed'] == 1 else "Pendiente", "Elaboración de costos unitarios y utilidades."),
+        ("Compuerta 5: Aprobación de Dirección General (P5)", "Validado" if p['step5_completed'] == 1 else "Pendiente", "Revisión ejecutiva y autorización de propuesta."),
+        ("Compuerta 6: Entrega Oficial al Cliente (P6)", "Validado" if p['step6_completed'] == 1 else "Pendiente", "Entrega física/digital formal de la propuesta técnica."),
+        ("Compuerta 7: Cierre Comercial de Licitación (P7)", p['status'], "Dictamen final del proyecto (Ganado / Perdido).")
     ]
 
     table_g = doc.add_table(rows=len(gates_details) + 1, cols=3)
     table_g.alignment = WD_TABLE_ALIGNMENT.CENTER
     table_g.autofit = False
-    headers_g = ["Compuerta Secuencial", "Estatus de ValidaciÃ³n", "DescripciÃ³n de la Actividad"]
+    headers_g = ["Compuerta Secuencial", "Estatus de Validación", "Descripción de la Actividad"]
     widths_g = [Inches(2.5), Inches(1.5), Inches(2.8)]
 
     hdr_row = table_g.rows[0]
@@ -3232,7 +3232,7 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
                 if text in ["Validado", "Ganado"]:
                     run.font.color.rgb = RGBColor(16, 185, 129) # Verde
                 elif text == "Pendiente":
-                    run.font.color.rgb = RGBColor(245, 158, 11) # Ãmbar
+                    run.font.color.rgb = RGBColor(245, 158, 11) # Ámbar
                 elif text == "Perdido":
                     run.font.color.rgb = RGBColor(194, 59, 34) # Rojo
 
@@ -3245,12 +3245,12 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
     h3_up_run.font.color.rgb = RGBColor(15, 76, 129)
 
     if not uploads:
-        doc.add_paragraph("No hay evidencias ni documentos asociados en SharePoint de Microsoft Teams aÃºn.")
+        doc.add_paragraph("No hay evidencias ni documentos asociados en SharePoint de Microsoft Teams aún.")
     else:
         table_u = doc.add_table(rows=len(uploads) + 1, cols=3)
         table_u.alignment = WD_TABLE_ALIGNMENT.CENTER
         table_u.autofit = False
-        headers_u = ["Documento / Evidencia", "UbicaciÃ³n (Paso)", "Subido por / Colaborador"]
+        headers_u = ["Documento / Evidencia", "Ubicación (Paso)", "Subido por / Colaborador"]
         widths_u = [Inches(3.2), Inches(1.8), Inches(1.8)]
 
         hdr_row = table_u.rows[0]
@@ -3287,12 +3287,12 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
     h3_run.font.color.rgb = RGBColor(15, 76, 129)
 
     if not logs:
-        doc.add_paragraph("No se cuenta con registros de auditorÃ­a para esta licitaciÃ³n.")
+        doc.add_paragraph("No se cuenta con registros de auditoría para esta licitación.")
     else:
         table_l = doc.add_table(rows=len(logs) + 1, cols=4)
         table_l.alignment = WD_TABLE_ALIGNMENT.CENTER
         table_l.autofit = False
-        headers_l = ["Fecha y Hora", "Colaborador", "AcciÃ³n Realizada", "Comentarios"]
+        headers_l = ["Fecha y Hora", "Colaborador", "Acción Realizada", "Comentarios"]
         widths_l = [Inches(1.2), Inches(1.3), Inches(2.3), Inches(2.0)]
 
         hdr_row = table_l.rows[0]
@@ -3361,10 +3361,10 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
     p_text = header_table.cell(0,1).paragraphs[0]; p_text.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     r = p_text.add_run("COMERCIALIZADORA INDUSTRIAL DC CONTROL S.A. DE C.V.\n"); r.bold = True; r.font.size = Pt(10)
     r.font.color.rgb = RGBColor(17,24,39)
-    r = p_text.add_run("Minuta de ReuniÃ³n Comercial-TÃ©cnica Â· Paso 2"); r.font.size = Pt(8.5); r.font.color.rgb = RGBColor(107,114,128)
+    r = p_text.add_run("Minuta de Reunión Comercial-Técnica · Paso 2"); r.font.size = Pt(8.5); r.font.color.rgb = RGBColor(107,114,128)
 
     title = doc.add_paragraph(); title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    rr = title.add_run(f"MINUTA DE REUNIÃ“N DE ALINEACIÃ“N Â· {p['id']}"); rr.bold=True; rr.font.size=Pt(15); rr.font.color.rgb=RGBColor(15,76,129)
+    rr = title.add_run(f"MINUTA DE REUNIÓN DE ALINEACIÓN · {p['id']}"); rr.bold=True; rr.font.size=Pt(15); rr.font.color.rgb=RGBColor(15,76,129)
 
     def section_title(text):
         q = doc.add_paragraph(); q.paragraph_format.space_before=Pt(8); q.paragraph_format.space_after=Pt(5)
@@ -3379,15 +3379,15 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
     details=[
         ("Folio",str(p['id'])),("Obra / Proyecto",str(p['name'])),
         ("Cliente",str(p['client'] or "____________________________")),
-        ("Estado / RegiÃ³n",f"{p['state'] or '________________'} / {p['zone'] or '________________'}"),
-        ("Fecha","____________________________"),("Hora de inicio / tÃ©rmino","____________________________"),
+        ("Estado / Región",f"{p['state'] or '________________'} / {p['zone'] or '________________'}"),
+        ("Fecha","____________________________"),("Hora de inicio / término","____________________________"),
         ("Lugar / modalidad","____________________________________________________________")]
     t=doc.add_table(rows=len(details),cols=2); t.autofit=False
     for i,(label,val) in enumerate(details):
         cell_text(t.rows[i].cells[0],label,True); shade(t.rows[i].cells[0],"F3F4F6"); cell_text(t.rows[i].cells[1],val)
 
     section_title("2. Lista de asistencia requerida")
-    attendees=[("Agente de Ventas",str(p['assigned_ventas'] or "")),("LÃ­der Regional",str(p['assigned_lider'] or "")),
+    attendees=[("Agente de Ventas",str(p['assigned_ventas'] or "")),("Líder Regional",str(p['assigned_lider'] or "")),
                ("Analista de Costos",str(p['assigned_costos'] or "")),("Cliente / Contacto",""),("Participante adicional","")]
     t=doc.add_table(rows=len(attendees)+1,cols=5)
     for j,h in enumerate(["Rol / participante","Nombre","Asistencia","Hora","Firma"]):
@@ -3395,7 +3395,7 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
         t.rows[0].cells[j].paragraphs[0].runs[0].font.color.rgb=RGBColor(255,255,255)
     for i,(role_name,name) in enumerate(attendees):
         row=t.rows[i+1]; cell_text(row.cells[0],role_name,True); cell_text(row.cells[1],name or "________________________")
-        cell_text(row.cells[2],"[ ] SÃ­   [ ] No"); cell_text(row.cells[3],"________"); cell_text(row.cells[4],"________________")
+        cell_text(row.cells[2],"[ ] Sí   [ ] No"); cell_text(row.cells[3],"________"); cell_text(row.cells[4],"________________")
 
     section_title("3. Temas a tratar")
     t=doc.add_table(rows=5,cols=3)
@@ -3416,7 +3416,7 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
 
     section_title("5. Pendientes y seguimiento")
     t=doc.add_table(rows=5,cols=4)
-    for j,h in enumerate(["Pendiente / acciÃ³n","Responsable","Fecha lÃ­mite","Seguimiento"]):
+    for j,h in enumerate(["Pendiente / acción","Responsable","Fecha límite","Seguimiento"]):
         cell_text(t.rows[0].cells[j],h,True); shade(t.rows[0].cells[j],"0F4C81")
         t.rows[0].cells[j].paragraphs[0].runs[0].font.color.rgb=RGBColor(255,255,255)
     for i in range(1,5):
@@ -3426,10 +3426,10 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
     for _ in range(5):
         q=doc.add_paragraph("________________________________________________________________________________"); q.paragraph_format.space_after=Pt(4)
 
-    section_title("7. ConfirmaciÃ³n de la reuniÃ³n")
-    doc.add_paragraph("Los participantes confirman que los acuerdos y pendientes anteriores reflejan lo tratado durante la reuniÃ³n.")
+    section_title("7. Confirmación de la reunión")
+    doc.add_paragraph("Los participantes confirman que los acuerdos y pendientes anteriores reflejan lo tratado durante la reunión.")
     t=doc.add_table(rows=2,cols=3)
-    for j,h in enumerate(["Ventas","LÃ­der Regional","Cliente / Participante"]):
+    for j,h in enumerate(["Ventas","Líder Regional","Cliente / Participante"]):
         cell_text(t.rows[0].cells[j],h,True); shade(t.rows[0].cells[j],"F3F4F6")
         cell_text(t.rows[1].cells[j],"\n\n________________________\nNombre y firma")
 
@@ -3487,14 +3487,14 @@ def get_performance_report(current_user=Depends(require_report_access)):
     run_hdr.bold = True
     run_hdr.font.size = Pt(10)
     run_hdr.font.color.rgb = RGBColor(17, 24, 39)
-    run_sub = p_text.add_run(f"Reporte de DesempeÃ±o y SLA de Equipos\nGenerado el: {date.today().strftime('%Y-%m-%d')} | Confidencial")
+    run_sub = p_text.add_run(f"Reporte de Desempeño y SLA de Equipos\nGenerado el: {date.today().strftime('%Y-%m-%d')} | Confidencial")
     run_sub.font.size = Pt(8.5)
     run_sub.font.color.rgb = RGBColor(107, 114, 128)
 
     doc.add_paragraph().paragraph_format.space_after = Pt(12)
 
     title_p = doc.add_paragraph()
-    title_run = title_p.add_run("REPORTE DE DESEMPEÃ‘O ORGANIZACIONAL Y SLA")
+    title_run = title_p.add_run("REPORTE DE DESEMPEÑO ORGANIZACIONAL Y SLA")
     title_run.bold = True
     title_run.font.size = Pt(16)
     title_run.font.color.rgb = RGBColor(15, 76, 129)
@@ -3507,7 +3507,7 @@ def get_performance_report(current_user=Depends(require_report_access)):
     h1_run.font.size = Pt(12)
     h1_run.font.color.rgb = RGBColor(15, 76, 129)
 
-    doc.add_paragraph("A continuaciÃ³n se presentan los dÃ­as promedio que tarda cada equipo o puesto en completar sus compuertas correspondientes:")
+    doc.add_paragraph("A continuación se presentan los días promedio que tarda cada equipo o puesto en completar sus compuertas correspondientes:")
 
     table_sla = doc.add_table(rows=5, cols=3)
     table_sla.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -3532,10 +3532,10 @@ def get_performance_report(current_user=Depends(require_report_access)):
     if len(df_p) == 0:
         v_avg = l_avg = c_avg = d_avg = 0.0
         roles_data = [
-            ("Ventas", "Paso 1 (Levantamiento) & Paso 6 (Entrega)", "0.0 dÃ­as hÃ¡biles"),
-            ("LÃ­der Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", "0.0 dÃ­as hÃ¡biles"),
-            ("Analista de Costos", "Paso 4 (ElaboraciÃ³n de CotizaciÃ³n)", "0.0 dÃ­as hÃ¡biles"),
-            ("DirecciÃ³n General", "Paso 5 (RevisiÃ³n) & Paso 7 (Cierre)", "0.0 dÃ­as hÃ¡biles")
+            ("Ventas", "Paso 1 (Levantamiento) & Paso 6 (Entrega)", "0.0 días hábiles"),
+            ("Líder Regional", "Paso 2 (Minuta) & Paso 3 (Catálogo)", "0.0 días hábiles"),
+            ("Analista de Costos", "Paso 4 (Elaboración de Cotización)", "0.0 días hábiles"),
+            ("Dirección General", "Paso 5 (Revisión) & Paso 7 (Cierre)", "0.0 días hábiles")
         ]
     else:
         ventas_days = []
@@ -3564,10 +3564,10 @@ def get_performance_report(current_user=Depends(require_report_access)):
         d_avg = round(sum(dir_days) / len(dir_days), 1) if dir_days else 0.0
 
         roles_data = [
-            ("Ventas", "Paso 1 (Levantamiento) & Paso 6 (Entrega)", f"{v_avg} dÃ­as hÃ¡biles"),
-            ("LÃ­der Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", f"{l_avg} dÃ­as hÃ¡biles"),
-            ("Analista de Costos", "Paso 4 (ElaboraciÃ³n de CotizaciÃ³n)", f"{c_avg} dÃ­as hÃ¡biles"),
-            ("DirecciÃ³n General", "Paso 5 (RevisiÃ³n) & Paso 7 (Cierre)", f"{d_avg} dÃ­as hÃ¡biles")
+            ("Ventas", "Paso 1 (Levantamiento) & Paso 6 (Entrega)", f"{v_avg} días hábiles"),
+            ("Líder Regional", "Paso 2 (Minuta) & Paso 3 (Catálogo)", f"{l_avg} días hábiles"),
+            ("Analista de Costos", "Paso 4 (Elaboración de Cotización)", f"{c_avg} días hábiles"),
+            ("Dirección General", "Paso 5 (Revisión) & Paso 7 (Cierre)", f"{d_avg} días hábiles")
         ]
 
     for i, (puesto, gates, val) in enumerate(roles_data):
@@ -3585,13 +3585,13 @@ def get_performance_report(current_user=Depends(require_report_access)):
     # 2. SLA Chart using Matplotlib
     doc.add_paragraph().paragraph_format.space_after = Pt(12)
     h2 = doc.add_paragraph()
-    h2_run = h2.add_run("2. GrÃ¡fico de Tiempos Promedio de Respuesta por Puesto")
+    h2_run = h2.add_run("2. Gráfico de Tiempos Promedio de Respuesta por Puesto")
     h2_run.bold = True
     h2_run.font.size = Pt(12)
     h2_run.font.color.rgb = RGBColor(15, 76, 129)
 
     fig, ax = plt.subplots(figsize=(4.5, 2.2))
-    puestos_chart = ["DirecciÃ³n", "Ventas", "LÃ­deres", "Costos"]
+    puestos_chart = ["Dirección", "Ventas", "Líderes", "Costos"]
     tiempos = [d_avg, v_avg, l_avg, c_avg]
     colors = ["#10B981", "#3B82F6", "#F59E0B", "#C23B22"]
     
@@ -3601,7 +3601,7 @@ def get_performance_report(current_user=Depends(require_report_access)):
     ax.spines['left'].set_color('#cccccc')
     ax.spines['bottom'].set_color('#cccccc')
     ax.tick_params(axis='both', colors='#4b5563', labelsize=8)
-    ax.set_xlabel('DÃ­as hÃ¡biles promedio', fontsize=8, color='#4b5563')
+    ax.set_xlabel('Días hábiles promedio', fontsize=8, color='#4b5563')
     
     for bar in bars:
         width = bar.get_width()
@@ -3618,41 +3618,41 @@ def get_performance_report(current_user=Depends(require_report_access)):
     p_chart.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_chart.add_run().add_picture(img_buf, width=Inches(4.8))
 
-    # 3. IdentificaciÃ³n de Cuellos de Botella y Recomendaciones Correctivas
+    # 3. Identificación de Cuellos de Botella y Recomendaciones Correctivas
     doc.add_paragraph().paragraph_format.space_after = Pt(12)
     h3 = doc.add_paragraph()
-    h3_run = h3.add_run("3. Sugerencias Correctivas e IntervenciÃ³n de Cuellos de Botella")
+    h3_run = h3.add_run("3. Sugerencias Correctivas e Intervención de Cuellos de Botella")
     h3_run.bold = True
     h3_run.font.size = Pt(12)
     h3_run.font.color.rgb = RGBColor(15, 76, 129)
 
-    doc.add_paragraph("De acuerdo con la auditorÃ­a sistemÃ¡tica de tiempos y transiciones de compuertas en la base de datos de Supabase, se han identificado las siguientes Ã¡reas de fricciÃ³n y acciones recomendadas:")
+    doc.add_paragraph("De acuerdo con la auditoría sistemática de tiempos y transiciones de compuertas en la base de datos de Supabase, se han identificado las siguientes áreas de fricción y acciones recomendadas:")
 
     has_real_data = (v_avg + l_avg + c_avg + d_avg) > 0
     if not has_real_data:
         recoms = [
-            ("Estado General del SLA", "No existen registros de compuertas en proceso suficientes para emitir anÃ¡lisis de cuellos de botella. Registre y avance proyectos para generar mÃ©tricas de desempeÃ±o reales.")
+            ("Estado General del SLA", "No existen registros de compuertas en proceso suficientes para emitir análisis de cuellos de botella. Registre y avance proyectos para generar métricas de desempeño reales.")
         ]
     else:
         role_map = [
             ("Analista de Costos - P4", c_avg),
-            ("LÃ­der Regional - P2 & P3", l_avg),
+            ("Líder Regional - P2 & P3", l_avg),
             ("Ventas - P1 & P6", v_avg),
-            ("DirecciÃ³n General - P5 & P7", d_avg)
+            ("Dirección General - P5 & P7", d_avg)
         ]
         role_map.sort(key=lambda x: x[1], reverse=True)
         max_name, max_val = role_map[0]
         min_name, min_val = role_map[-1]
         recoms = [
-            (f"Ãrea de Oportunidad Principal ({max_name})", f"El puesto registra un promedio de {max_val} dÃ­as de respuesta. Se recomienda agilizar el flujo de sus compuertas para mejorar el tiempo global del proceso."),
-            (f"DesempeÃ±o Destacado ({min_name})", f"El puesto mantiene el mejor tiempo promedio de respuesta con {min_val} dÃ­as hÃ¡biles, acelerando la atenciÃ³n de sus etapas asignadas.")
+            (f"Área de Oportunidad Principal ({max_name})", f"Concentra el mayor tiempo promedio registrado, con {max_val} días de respuesta. Conviene revisar las actividades asociadas para identificar oportunidades de mejora en el flujo."),
+            (f"Desempeño Destacado ({min_name})", f"Presenta el menor tiempo promedio registrado, con {min_val} días hábiles, dentro de las etapas analizadas.")
         ]
 
     for title, desc in recoms:
         p_recom = doc.add_paragraph(style="List Bullet")
         run_title = p_recom.add_run(f"{title}: ")
         run_title.bold = True
-        run_title.font.color.rgb = RGBColor(194, 59, 34) if ("Oportunidad" in title or "CrÃ­tico" in title) else RGBColor(15, 76, 129)
+        run_title.font.color.rgb = RGBColor(194, 59, 34) if ("Oportunidad" in title or "Crítico" in title) else RGBColor(15, 76, 129)
         p_recom.add_run(desc)
 
     bio = io.BytesIO()
@@ -3688,14 +3688,14 @@ def open_project_folder(project_id: str, current_user=Depends(get_current_user))
         if not sharepoint_url:
             raise HTTPException(
                 status_code=404,
-                detail="No se encontrÃ³ la carpeta SharePoint del proyecto"
+                detail="No se encontró la carpeta SharePoint del proyecto"
             )
 
         return {
             "status": "success",
             "path": sharepoint_url,
             "url": sharepoint_url,
-            "message": "UbicaciÃ³n SharePoint del proyecto"
+            "message": "Ubicación SharePoint del proyecto"
         }
     finally:
         put_db_connection(conn)
@@ -3712,7 +3712,7 @@ def admin_update_user(username: str, req: AdminUserUpdateRequest, current_user=D
     if username == "noe.ortizadm" and not is_admin_or_director(current_user):
         raise HTTPException(status_code=403, detail="Cuenta principal protegida")
     if username == "noe.ortizadm":
-        # La cuenta principal no puede perder su identidad privilegiada por una peticiÃ³n administrativa.
+        # La cuenta principal no puede perder su identidad privilegiada por una petición administrativa.
         req_role = "Admin/Director"
         req_privileges = "dashboards,reports,projects,reversal"
     else:
@@ -3728,7 +3728,7 @@ def admin_update_user(username: str, req: AdminUserUpdateRequest, current_user=D
             cursor.execute("UPDATE users SET full_name = %s, role = %s, email = %s, privileges = %s WHERE username = %s",
                            (req.full_name, req_role, req.email, req_privileges, username))
         conn.commit()
-        log_audit("SISTEMA", current_user.get("full_name") or current_user.get("username"), current_user.get("role"), f"ActualizÃ³ perfil y permisos de {username}")
+        log_audit("SISTEMA", current_user.get("full_name") or current_user.get("username"), current_user.get("role"), f"Actualizó perfil y permisos de {username}")
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
