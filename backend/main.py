@@ -123,38 +123,38 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ESTADOS_MEXICO = {
-    "CDMX": "Líder Regional - Sur",
-    "Estado de México": "Líder Regional - Sur",
-    "Querétaro": "Líder Regional - Sur",
-    "Guanajuato": "Líder Regional - Sur",
-    "Jalisco": "Líder Regional - Sur",
-    "Michoacán": "Líder Regional - Sur",
-    "Puebla": "Líder Regional - Sur",
-    "Veracruz": "Líder Regional - Sur",
-    "Hidalgo": "Líder Regional - Sur",
-    "Morelos": "Líder Regional - Sur",
-    "Guerrero": "Líder Regional - Sur",
-    "Oaxaca": "Líder Regional - Sur",
-    "Chiapas": "Líder Regional - Sur",
-    "Tabasco": "Líder Regional - Sur",
-    "Campeche": "Líder Regional - Sur",
-    "Yucatán": "Líder Regional - Sur",
-    "Quintana Roo": "Líder Regional - Sur",
-    "Tlaxcala": "Líder Regional - Sur",
-    "Colima": "Líder Regional - Sur",
-    "Nayarit": "Líder Regional - Sur",
-    "Nuevo León": "Líder Regional - Norte",
-    "Chihuahua": "Líder Regional - Norte",
-    "Coahuila": "Líder Regional - Norte",
-    "Sonora": "Líder Regional - Norte",
-    "Baja California": "Líder Regional - Norte",
-    "Baja California Sur": "Líder Regional - Norte",
-    "San Luis Potosí": "Líder Regional - Norte",
-    "Aguascalientes": "Líder Regional - Norte",
-    "Durango": "Líder Regional - Norte",
-    "Sinaloa": "Líder Regional - Norte",
-    "Zacatecas": "Líder Regional - Norte",
-    "Tamaulipas": "Líder Regional - Norte"
+    "CDMX": "LÃ­der Regional - Sur",
+    "Estado de MÃ©xico": "LÃ­der Regional - Sur",
+    "QuerÃ©taro": "LÃ­der Regional - Sur",
+    "Guanajuato": "LÃ­der Regional - Sur",
+    "Jalisco": "LÃ­der Regional - Sur",
+    "MichoacÃ¡n": "LÃ­der Regional - Sur",
+    "Puebla": "LÃ­der Regional - Sur",
+    "Veracruz": "LÃ­der Regional - Sur",
+    "Hidalgo": "LÃ­der Regional - Sur",
+    "Morelos": "LÃ­der Regional - Sur",
+    "Guerrero": "LÃ­der Regional - Sur",
+    "Oaxaca": "LÃ­der Regional - Sur",
+    "Chiapas": "LÃ­der Regional - Sur",
+    "Tabasco": "LÃ­der Regional - Sur",
+    "Campeche": "LÃ­der Regional - Sur",
+    "YucatÃ¡n": "LÃ­der Regional - Sur",
+    "Quintana Roo": "LÃ­der Regional - Sur",
+    "Tlaxcala": "LÃ­der Regional - Sur",
+    "Colima": "LÃ­der Regional - Sur",
+    "Nayarit": "LÃ­der Regional - Sur",
+    "Nuevo LeÃ³n": "LÃ­der Regional - Norte",
+    "Chihuahua": "LÃ­der Regional - Norte",
+    "Coahuila": "LÃ­der Regional - Norte",
+    "Sonora": "LÃ­der Regional - Norte",
+    "Baja California": "LÃ­der Regional - Norte",
+    "Baja California Sur": "LÃ­der Regional - Norte",
+    "San Luis PotosÃ­": "LÃ­der Regional - Norte",
+    "Aguascalientes": "LÃ­der Regional - Norte",
+    "Durango": "LÃ­der Regional - Norte",
+    "Sinaloa": "LÃ­der Regional - Norte",
+    "Zacatecas": "LÃ­der Regional - Norte",
+    "Tamaulipas": "LÃ­der Regional - Norte"
 }
 
 # Connection pool
@@ -225,7 +225,7 @@ def get_ms_graph_token():
 
 def send_ms_graph_email(to_emails, subject, body_html, attachments=None, sender_email="noe_ortiz@dccontrol.com.mx"):
     """
-    Envía correo mediante Microsoft Graph.
+    EnvÃ­a correo mediante Microsoft Graph.
     to_emails: string separado por coma o punto y coma, o lista de correos.
     attachments: lista opcional de dicts con:
         name, content_type, content_bytes
@@ -314,7 +314,7 @@ def send_ms_graph_email(to_emails, subject, body_html, attachments=None, sender_
             detail = response.text
 
         raise RuntimeError(
-            f"Microsoft Graph rechazó el envío ({response.status_code}): {detail}"
+            f"Microsoft Graph rechazÃ³ el envÃ­o ({response.status_code}): {detail}"
         )
 
     return {
@@ -325,7 +325,7 @@ def send_ms_graph_email(to_emails, subject, body_html, attachments=None, sender_
 def get_sharepoint_drive_details():
     import requests
 
-    # DC Control utiliza un sitio SharePoint espec?fico.
+    # DC Control utiliza un sitio SharePoint especÃ­fico.
     site_host = "ingenieriadc.sharepoint.com"
     site_path = "/sites/SalesHubDCControl"
 
@@ -566,24 +566,24 @@ def _bg_dispatch_parameter_change_notifications(project_id, new_step_num, new_ta
     if emails:
         for email, f_name in emails:
             try:
-                subject = f"DC Control - Parámetros de Proyecto Modificados: {project_id} - {p['name']}"
+                subject = f"DC Control - ParÃ¡metros de Proyecto Modificados: {project_id} - {p['name']}"
                 body = f"""<html>
 <body style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6;">
     <div style="background-color: #111827; color: white; padding: 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #C23B22;">
-        <h2 style="margin: 0; font-size: 20px;">DC Control - Notificación de Cambios</h2>
+        <h2 style="margin: 0; font-size: 20px;">DC Control - NotificaciÃ³n de Cambios</h2>
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
         <p>Hola <strong>{f_name}</strong>,</p>
-        <p>Se han modificado de manera oficial los parámetros del proyecto <strong>{project_id} - {p['name']}</strong>.</p>
+        <p>Se han modificado de manera oficial los parÃ¡metros del proyecto <strong>{project_id} - {p['name']}</strong>.</p>
         <p style="background-color: #f3f4f6; padding: 15px; border-radius: 4px; border-left: 4px solid #C23B22;">
-            <strong>Detalles de la Actualización:</strong><br>
-            <span style="font-size: 15px; font-weight: bold; color: #111827;">Nueva Fecha Límite:</span> {new_target_date}<br>
+            <strong>Detalles de la ActualizaciÃ³n:</strong><br>
+            <span style="font-size: 15px; font-weight: bold; color: #111827;">Nueva Fecha LÃ­mite:</span> {new_target_date}<br>
             <span style="font-size: 15px; font-weight: bold; color: #111827;">Paso Activo de Compuerta:</span> Paso {new_step_num}<br>
-            <span style="font-size: 15px; font-weight: bold; color: #111827;">Justificación / Notas:</span><br>
+            <span style="font-size: 15px; font-weight: bold; color: #111827;">JustificaciÃ³n / Notas:</span><br>
             <span style="color: #4b5563; font-style: italic;">"{justification or 'No especificada'}"</span>
         </p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-        <p style="font-size: 13px; color: #6b7280;">Por favor, ingresa a la aplicación de escritorio de DC Control para continuar.</p>
+        <p style="font-size: 13px; color: #6b7280;">Por favor, ingresa a la aplicaciÃ³n de escritorio de DC Control para continuar.</p>
     </div>
 </body>
 </html>"""
@@ -618,23 +618,23 @@ def _bg_dispatch_parameter_change_notifications(project_id, new_step_num, new_ta
                             "body": [
                                 {
                                     "type": "TextBlock",
-                                    "text": "Solicitud de Corrección Requerida",
+                                    "text": "Solicitud de CorrecciÃ³n Requerida",
                                     "weight": "Bolder",
                                     "size": "Medium",
                                     "color": "Attention"
                                 },
                                 {
                                     "type": "TextBlock",
-                                    "text": f"Hola {mentions_text}, se han modificado de manera oficial los parámetros del proyecto **{project_id} - {p['name']}**.",
+                                    "text": f"Hola {mentions_text}, se han modificado de manera oficial los parÃ¡metros del proyecto **{project_id} - {p['name']}**.",
                                     "wrap": True
                                 },
                                 {
                                     "type": "FactSet",
                                     "facts": [
                                         {"title": "Cliente:", "value": str(p['client'])},
-                                        {"title": "Nueva Fecha Límite:", "value": str(new_target_date)},
+                                        {"title": "Nueva Fecha LÃ­mite:", "value": str(new_target_date)},
                                         {"title": "Paso Activo:", "value": f"Paso {new_step_num}"},
-                                        {"title": "Justificación:", "value": str(justification or "No especificada")}
+                                        {"title": "JustificaciÃ³n:", "value": str(justification or "No especificada")}
                                     ]
                                 }
                             ],
@@ -674,13 +674,13 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
             return
 
         steps_meta = {
-            1: {"name": "Paso 1: Levantamiento Técnico", "desc": "Cargar la evidencia y datos técnicos del levantamiento de la obra.", "assignee": p['assigned_ventas']},
-            2: {"name": "Paso 2: Reunión de Seguimiento y Minuta de Trabajo", "desc": "Realizar la reunión comercial-técnica y subir la minuta firmada por Ventas y Líder.", "assignee": f"{p['assigned_ventas']} & {p['assigned_lider']}"},
-            3: {"name": "Paso 3: Catálogo de Conceptos Técnico", "desc": "Elaborar y subir el catálogo de conceptos técnicos de ingeniería.", "assignee": p['assigned_lider']},
-            4: {"name": "Paso 4: Elaboración de Cotización de Precios", "desc": "Formular los precios unitarios, márgenes de utilidad y cargar la cotización final.", "assignee": p['assigned_costos']},
-            5: {"name": "Paso 5: Revisión de Cotización y Aprobación", "desc": "Revisión a detalle de costos, alcance y margen comercial para su firma autorizada.", "assignee": "Dirección General / Directores"},
+            1: {"name": "Paso 1: Levantamiento TÃ©cnico", "desc": "Cargar la evidencia y datos tÃ©cnicos del levantamiento de la obra.", "assignee": p['assigned_ventas']},
+            2: {"name": "Paso 2: ReuniÃ³n de Seguimiento y Minuta de Trabajo", "desc": "Realizar la reuniÃ³n comercial-tÃ©cnica y subir la minuta firmada por Ventas y LÃ­der.", "assignee": f"{p['assigned_ventas']} & {p['assigned_lider']}"},
+            3: {"name": "Paso 3: CatÃ¡logo de Conceptos TÃ©cnico", "desc": "Elaborar y subir el catÃ¡logo de conceptos tÃ©cnicos de ingenierÃ­a.", "assignee": p['assigned_lider']},
+            4: {"name": "Paso 4: ElaboraciÃ³n de CotizaciÃ³n de Precios", "desc": "Formular los precios unitarios, mÃ¡rgenes de utilidad y cargar la cotizaciÃ³n final.", "assignee": p['assigned_costos']},
+            5: {"name": "Paso 5: RevisiÃ³n de CotizaciÃ³n y AprobaciÃ³n", "desc": "RevisiÃ³n a detalle de costos, alcance y margen comercial para su firma autorizada.", "assignee": "DirecciÃ³n General / Directores"},
             6: {"name": "Paso 6: Entrega Comercial al Cliente", "desc": "Entregar formalmente la propuesta al cliente final y registrar el monto final entregado con su evidencia.", "assignee": p['assigned_ventas']},
-            7: {"name": "Paso 7: Cierre Comercial de Licitación", "desc": "Especificar el resultado comercial definitivo (Ganado / Perdido / Cancelado).", "assignee": "Dirección General"}
+            7: {"name": "Paso 7: Cierre Comercial de LicitaciÃ³n", "desc": "Especificar el resultado comercial definitivo (Ganado / Perdido / Cancelado).", "assignee": "DirecciÃ³n General"}
         }
 
         meta = steps_meta.get(next_step_num)
@@ -740,13 +740,13 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                 body = f"""<html>
 <body style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6;">
     <div style="background-color: #111827; color: white; padding: 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #0F4C81;">
-        <h2 style="margin: 0; font-size: 20px;">DC Control - Gestión Comercial</h2>
+        <h2 style="margin: 0; font-size: 20px;">DC Control - GestiÃ³n Comercial</h2>
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
         <p>Hola <strong>{f_name}</strong>,</p>
         <p>Te informamos que se ha avanzado de etapa en el proyecto <strong>{project_id} - {p['name']}</strong> para el cliente <strong>{p['client']}</strong>.</p>
         <p style="background-color: #f3f4f6; padding: 15px; border-radius: 4px; border-left: 4px solid #0F4C81;">
-            <strong>Siguiente Acción Requerida:</strong><br>
+            <strong>Siguiente AcciÃ³n Requerida:</strong><br>
             <span style="font-size: 16px; font-weight: bold; color: #111827;">{meta['name']}</span><br>
             <span style="color: #4b5563;">{meta['desc']}</span>
         </p>
@@ -788,7 +788,7 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                             "body": [
                                 {
                                     "type": "TextBlock",
-                                    "text": "🔵 **DC Control - Siguiente Paso Habilitado**",
+                                    "text": "ðŸ”µ **DC Control - Siguiente Paso Habilitado**",
                                     "weight": "Bolder",
                                     "size": "Medium",
                                     "color": "Good"
@@ -804,7 +804,7 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                                         {"title": "Cliente:", "value": str(p['client'])},
                                         {"title": "Siguiente Tarea:", "value": str(meta['name'])},
                                         {"title": "Responsable:", "value": str(meta['assignee'])},
-                                        {"title": "Fecha Límite:", "value": str(p['target_date'] or "No definida")}
+                                        {"title": "Fecha LÃ­mite:", "value": str(p['target_date'] or "No definida")}
                                     ]
                                 }
                             ],
@@ -843,12 +843,12 @@ def _bg_dispatch_rejection_notification(project_id, step_num, justification):
             target_name = p['assigned_lider']
             subject = f"DC Control - CatÃ¡logo Incompleto: {project_id} - {p['name']}"
             body_text = "El catÃ¡logo de conceptos tÃ©cnicos ha sido marcado como INCOMPLETO."
-            action_label = "Corregir Catálogo"
+            action_label = "Corregir CatÃ¡logo"
         elif step_num == 5:
             target_name = p['assigned_costos']
             subject = f"DC Control - Modificaciones de CotizaciÃ³n: {project_id} - {p['name']}"
             body_text = "Se han solicitado modificaciones para la propuesta de cotizaciÃ³n."
-            action_label = "Modificar Cotización"
+            action_label = "Modificar CotizaciÃ³n"
         else:
             return
 
@@ -885,14 +885,14 @@ def _bg_dispatch_rejection_notification(project_id, step_num, justification):
                 body = f"""<html>
 <body style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6;">
     <div style="background-color: #C23B22; color: white; padding: 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #111827;">
-        <h2 style="margin: 0; font-size: 20px;">DC Control - Solicitud de Correcci?n</h2>
+        <h2 style="margin: 0; font-size: 20px;">DC Control - Solicitud de CorrecciÃ³n</h2>
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
         <p>Hola <strong>{f_name}</strong>,</p>
         <p>{body_text}</p>
         <p style="background-color: #fdf2f2; padding: 15px; border-radius: 4px; border-left: 4px solid #C23B22;">
-            <strong>Detalles de la Correcci?n Solicitada:</strong><br>
-            <span style="font-size: 15px; color: #111827; font-weight: bold;">Justificaci?n:</span><br>
+            <strong>Detalles de la CorrecciÃ³n Solicitada:</strong><br>
+            <span style="font-size: 15px; color: #111827; font-weight: bold;">JustificaciÃ³n:</span><br>
             <span style="color: #4b5563; font-style: italic;">"{justification}"</span>
         </p>
         <p><strong>Proyecto:</strong> {project_id} - {p['name']}</p>
@@ -933,22 +933,22 @@ def _bg_dispatch_rejection_notification(project_id, step_num, justification):
                             "body": [
                                 {
                                     "type": "TextBlock",
-                                    "text": "DC Control - Solicitud de Corrección Requerida",
+                                    "text": "DC Control - Solicitud de CorrecciÃ³n Requerida",
                                     "weight": "Bolder",
                                     "size": "Medium",
                                     "color": "Attention"
                                 },
                                 {
                                     "type": "TextBlock",
-                                    "text": f"Hola {mentions_text}, se han solicitado modificaciones o correcciones para la licitación **{project_id} - {p['name']}**.",
+                                    "text": f"Hola {mentions_text}, se han solicitado modificaciones o correcciones para la licitaciÃ³n **{project_id} - {p['name']}**.",
                                     "wrap": True
                                 },
                                 {
                                     "type": "FactSet",
                                     "facts": [
                                         {"title": "Cliente:", "value": str(p['client'])},
-                                        {"title": "Acción Requerida:", "value": str(action_label)},
-                                        {"title": "Justificación:", "value": str(justification)}
+                                        {"title": "AcciÃ³n Requerida:", "value": str(action_label)},
+                                        {"title": "JustificaciÃ³n:", "value": str(justification)}
                                     ]
                                 }
                             ],
@@ -1088,10 +1088,10 @@ def require_report_access(user=Depends(get_current_user)):
 def _normalize_assignment(value):
     """
     Normaliza asignaciones para tolerar:
-    - may?sculas/min?sculas
+    - mayÃºsculas/minÃºsculas
     - acentos
     - espacios extra
-    - mojibake UTF-8/Latin-1 (ej. L??der -> L?der)
+    - mojibake UTF-8/Latin-1 (ej. L??der -> LÃ­der)
     """
     import unicodedata
 
@@ -1131,7 +1131,7 @@ def _is_assigned(user, assigned):
     if assigned_norm in {role_norm, name_norm, username_norm}:
         return True
 
-    # Asignaciones gen?ricas de Ventas.
+    # Asignaciones genÃ©ricas de Ventas.
     if assigned_norm in {"agente de ventas", "ventas"}:
         return (
             "ventas" in role_norm
@@ -1139,7 +1139,7 @@ def _is_assigned(user, assigned):
             or "agente" in role_norm
         )
 
-    # Asignaciones gen?ricas/espec?ficas de L?der Regional.
+    # Asignaciones genÃ©ricas/especÃ­ficas de LÃ­der Regional.
     if "lider regional" in assigned_norm:
         return (
             "lider regional" in role_norm
@@ -1523,7 +1523,7 @@ def get_dashboard_summary(current_user=Depends(get_current_user)):
 
         # ============================================================
         # COTIZADO VS GANADO
-        # Solo los datos m?nimos necesarios para la gr?fica.
+        # Solo los datos mÃ­nimos necesarios para la grÃ¡fica.
         # ============================================================
         cursor.execute("""
             SELECT
@@ -1641,7 +1641,7 @@ def get_dashboard_summary(current_user=Depends(get_current_user)):
 def create_project(req: CreateProjectRequest, current_user=Depends(require_admin)):
     # Generates next project ID matching logic of generate_next_project_id
     year_month = datetime.now().strftime("%Y%m")
-    region_auto = ESTADOS_MEXICO.get(req.state, "Líder Regional - Sur")
+    region_auto = ESTADOS_MEXICO.get(req.state, "LÃ­der Regional - Sur")
     zone_auto = "S" if "Sur" in region_auto else "N"
     prefix = f"DCC-{year_month}-{zone_auto}-"
 
@@ -1695,7 +1695,7 @@ def create_project(req: CreateProjectRequest, current_user=Depends(require_admin
             leader_db = cursor.fetchone()
             assigned_leader = leader_db['full_name'] if leader_db else region_auto
 
-        final_ventas = assigned_leader if req.comm_responsibility == "Líder Regional" else req.assigned_ventas
+        final_ventas = assigned_leader if req.comm_responsibility == "LÃ­der Regional" else req.assigned_ventas
 
         init_stage = 7 if req.skip_to_cierre else 1
         s1 = 1 if req.skip_to_cierre else 0
@@ -1781,7 +1781,7 @@ def edit_project(proj_id: str, req: EditProjectRequest, current_user=Depends(req
 
         # Determine sales assignment
         assigned_leader_val = req.assigned_lider if req.assigned_lider else p_details['assigned_lider']
-        edit_ventas_val = assigned_leader_val if req.comm_responsibility == "Líder Regional" else req.assigned_ventas
+        edit_ventas_val = assigned_leader_val if req.comm_responsibility == "LÃ­der Regional" else req.assigned_ventas
 
         cursor.execute('''
             UPDATE projects
@@ -1806,7 +1806,7 @@ def edit_project(proj_id: str, req: EditProjectRequest, current_user=Depends(req
         dispatch_parameter_change_notifications(proj_id, req.current_stage, req.target_date, req.justification)
         audit_name = current_user.get("full_name") or current_user.get("username") or "Usuario"
         audit_role = current_user.get("role") or "Admin/Director"
-        log_audit(proj_id, audit_name, audit_role, f"ModificÃ³ parámetros (Etapa: {req.current_stage}, Prioridad: {req.priority}, Límite: {req.target_date})", comments=req.justification if req.justification else None)
+        log_audit(proj_id, audit_name, audit_role, f"ModificÃ³ parÃ¡metros (Etapa: {req.current_stage}, Prioridad: {req.priority}, LÃ­mite: {req.target_date})", comments=req.justification if req.justification else None)
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -2311,7 +2311,7 @@ def confirm_step2_reunion(project_id: str = Form(...), user_role: str = Form(...
                 if p.get('step2_lider_done') == 1:
                     raise HTTPException(
                         status_code=400,
-                        detail="La confirmaciÃ³n del Líder Regional para el Paso 2 ya fue realizada"
+                        detail="La confirmaciÃ³n del LÃ­der Regional para el Paso 2 ya fue realizada"
                     )
 
                 cursor.execute(
@@ -2542,21 +2542,21 @@ def test_smtp_connection(admin_email: str = Form(...), current_user=Depends(requ
         body_html = """<html>
 <body style="font-family: Arial, sans-serif; color: #333333;">
     <div style="background-color: #111827; color: white; padding: 15px 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #0F4C81;">
-        <h2 style="margin: 0; font-size: 18px;">Validación de correo - DC Control</h2>
+        <h2 style="margin: 0; font-size: 18px;">ValidaciÃ³n de correo - DC Control</h2>
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
-        <p>¡Hola!</p>
+        <p>Â¡Hola!</p>
         <p>Este es un correo de prueba enviado desde la <strong>DC Control App v1.0.0</strong>.</p>
-        <p>El envío mediante <strong>Microsoft Graph</strong> ha sido validado con éxito.</p>
+        <p>El envÃ­o mediante <strong>Microsoft Graph</strong> ha sido validado con Ã©xito.</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 15px 0;">
-        <p style="font-size: 11px; color: #6b7280; text-align: center;">DC Control S.A. de C.V. • Gestión Comercial</p>
+        <p style="font-size: 11px; color: #6b7280; text-align: center;">DC Control S.A. de C.V. â€¢ GestiÃ³n Comercial</p>
     </div>
 </body>
 </html>"""
 
         result = send_ms_graph_email(
             to_emails=admin_email,
-            subject="DC Control - Validación de correo exitosa",
+            subject="DC Control - ValidaciÃ³n de correo exitosa",
             body_html=body_html
         )
 
@@ -2766,7 +2766,7 @@ def _generate_executive_report_docx():
             tbl_p = doc.add_table(rows=len(df_active) + 1, cols=6)
             tbl_p.alignment = WD_TABLE_ALIGNMENT.CENTER
             tbl_p.autofit = False
-            headers_p = ["Folio ID", "Obra / Proyecto", "Cliente", "Paso Atorado", "Fecha Límite", "Monto Estimado"]
+            headers_p = ["Folio ID", "Obra / Proyecto", "Cliente", "Paso Atorado", "Fecha LÃ­mite", "Monto Estimado"]
             widths_p = [Inches(1.0), Inches(1.8), Inches(1.5), Inches(1.2), Inches(1.2), Inches(1.1)]
 
             # Header Row Styling
@@ -2857,7 +2857,7 @@ def _generate_executive_report_docx():
                         'name': p['name'],
                         'days': diffDays,
                         'stage': p['current_stage'],
-                        'responsible': p['assigned_ventas'] if p['current_stage'] in [1, 6] else p['assigned_lider'] if p['current_stage'] in [2, 3] else p['assigned_costos'] if p['current_stage'] == 4 else "Noe Ortiz"
+                        'responsible': p['assigned_ventas'] if p['current_stage'] in [1, 6] else p['assigned_lider'] if p['current_stage'] in [2, 3] else p['assigned_costos'] if p['current_stage'] == 4 else "Dirección General"
                     })
                 except Exception:
                     pass
@@ -2937,7 +2937,7 @@ def _generate_executive_report_docx():
         # Draw to document
         doc.add_paragraph().paragraph_format.space_after = Pt(12)
         h_graphs = doc.add_paragraph()
-        h_graphs_run = h_graphs.add_run("5. DIAGNÓSTICO GRÁFICO GENERAL DE CUELLOS DE BOTELLA")
+        h_graphs_run = h_graphs.add_run("5. DIAGNÃ“STICO GRÃFICO GENERAL DE CUELLOS DE BOTELLA")
         h_graphs_run.bold = True
         h_graphs_run.font.size = Pt(12)
         h_graphs_run.font.color.rgb = RGBColor(17, 24, 39)
@@ -2980,7 +2980,7 @@ def _generate_executive_report_docx():
         if not won_states.empty:
             top_won_state = won_states.index[0]
             sug_p.add_run("â€¢ DistribuciÃ³n de cierres ganados: ").bold = True
-            sug_p.add_run(f"La mayor concentración de licitaciones ganadas por estado se encuentra en {top_won_state}; se presenta como dato descriptivo para el análisis comercial.\n")
+            sug_p.add_run(f"La mayor concentraciÃ³n de licitaciones ganadas por estado se encuentra en {top_won_state}; se presenta como dato descriptivo para el anÃ¡lisis comercial.\n")
 
     bio = io.BytesIO()
     doc.save(bio)
@@ -3144,7 +3144,7 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
         ("Cliente", str(p['client'])),
         ("Estado de la RepÃºblica", f"{p['state']} ({p['zone']})"),
         ("Agente de Ventas Responsable", str(p['assigned_ventas'])),
-        ("Líder Regional Responsable", str(p['assigned_lider'])),
+        ("LÃ­der Regional Responsable", str(p['assigned_lider'])),
         ("Analista de Costos Asignado", str(p['assigned_costos'])),
         ("Prioridad de AtenciÃ³n", str(p['priority'])),
         ("Monto Final Cotizado", f"${p['final_amount']:,.2f}"),
@@ -3190,7 +3190,7 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
 
     gates_details = [
         ("Compuerta 1: Levantamiento TÃ©cnico de Obra (P1)", "Validado" if p['step1_completed'] == 1 else "Pendiente", "Estudio de viabilidad inicial y alcances de la obra."),
-        ("Compuerta 2: Minuta de Trabajo y ConfirmaciÃ³n (P2)", "Validado" if p['step2_completed'] == 1 else "Pendiente", "AlineaciÃ³n comercial. ConfirmaciÃ³n de Ventas y Líder Regional."),
+        ("Compuerta 2: Minuta de Trabajo y ConfirmaciÃ³n (P2)", "Validado" if p['step2_completed'] == 1 else "Pendiente", "AlineaciÃ³n comercial. ConfirmaciÃ³n de Ventas y LÃ­der Regional."),
         ("Compuerta 3: CatÃ¡logo de Conceptos e IngenierÃ­a (P3)", "Validado" if p['step3_completed'] == 1 else "Pendiente", "Estructura tÃ©cnica de conceptos de obra."),
         ("Compuerta 4: CotizaciÃ³n de Precios y Utilidades (P4)", "Validado" if p['step4_completed'] == 1 else "Pendiente", "ElaboraciÃ³n de costos unitarios y utilidades."),
         ("Compuerta 5: AprobaciÃ³n de DirecciÃ³n General (P5)", "Validado" if p['step5_completed'] == 1 else "Pendiente", "RevisiÃ³n ejecutiva y autorizaciÃ³n de propuesta."),
@@ -3320,35 +3320,6 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
                 p_cell.paragraph_format.space_after = Pt(4)
                 p_cell.add_run(str(text))
 
-    # 5. Firmas de Conformidad
-    doc.add_paragraph().paragraph_format.space_after = Pt(24)
-    h5 = doc.add_paragraph()
-    h5_run = h5.add_run("5. Firmas y Validaciones de Conformidad de Cierre")
-    h5_run.bold = True
-    h5_run.font.size = Pt(12)
-    h5_run.font.color.rgb = RGBColor(15, 76, 129)
-
-    table_sign = doc.add_table(rows=2, cols=2)
-    table_sign.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table_sign.autofit = False
-    
-    sign_pax = [
-        ("_____________________________________\nAgente de Ventas Asignado", "_____________________________________\nLíder Regional Asignado"),
-        ("_____________________________________\nAnalista de Costos Responsable", "_____________________________________\nDirecciÃ³n General (Noe Ortiz)")
-    ]
-
-    for row_idx, row_text in enumerate(sign_pax):
-        row = table_sign.rows[row_idx]
-        for col_idx, text in enumerate(row_text):
-            cell = row.cells[col_idx]
-            cell.width = Inches(3.4)
-            p_cell = cell.paragraphs[0]
-            p_cell.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p_cell.paragraph_format.space_before = Pt(20)
-            p_cell.paragraph_format.space_after = Pt(20)
-            run = p_cell.add_run(text)
-            run.font.size = Pt(9.5)
-
     bio = io.BytesIO()
     doc.save(bio)
     bio.seek(0)
@@ -3416,7 +3387,7 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
         cell_text(t.rows[i].cells[0],label,True); shade(t.rows[i].cells[0],"F3F4F6"); cell_text(t.rows[i].cells[1],val)
 
     section_title("2. Lista de asistencia requerida")
-    attendees=[("Agente de Ventas",str(p['assigned_ventas'] or "")),("Líder Regional",str(p['assigned_lider'] or "")),
+    attendees=[("Agente de Ventas",str(p['assigned_ventas'] or "")),("LÃ­der Regional",str(p['assigned_lider'] or "")),
                ("Analista de Costos",str(p['assigned_costos'] or "")),("Cliente / Contacto",""),("Participante adicional","")]
     t=doc.add_table(rows=len(attendees)+1,cols=5)
     for j,h in enumerate(["Rol / participante","Nombre","Asistencia","Hora","Firma"]):
@@ -3458,7 +3429,7 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
     section_title("7. ConfirmaciÃ³n de la reuniÃ³n")
     doc.add_paragraph("Los participantes confirman que los acuerdos y pendientes anteriores reflejan lo tratado durante la reuniÃ³n.")
     t=doc.add_table(rows=2,cols=3)
-    for j,h in enumerate(["Ventas","Líder Regional","Cliente / Participante"]):
+    for j,h in enumerate(["Ventas","LÃ­der Regional","Cliente / Participante"]):
         cell_text(t.rows[0].cells[j],h,True); shade(t.rows[0].cells[j],"F3F4F6")
         cell_text(t.rows[1].cells[j],"\n\n________________________\nNombre y firma")
 
@@ -3562,7 +3533,7 @@ def get_performance_report(current_user=Depends(require_report_access)):
         v_avg = l_avg = c_avg = d_avg = 0.0
         roles_data = [
             ("Ventas", "Paso 1 (Levantamiento) & Paso 6 (Entrega)", "0.0 dÃ­as hÃ¡biles"),
-            ("Líder Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", "0.0 dÃ­as hÃ¡biles"),
+            ("LÃ­der Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", "0.0 dÃ­as hÃ¡biles"),
             ("Analista de Costos", "Paso 4 (ElaboraciÃ³n de CotizaciÃ³n)", "0.0 dÃ­as hÃ¡biles"),
             ("DirecciÃ³n General", "Paso 5 (RevisiÃ³n) & Paso 7 (Cierre)", "0.0 dÃ­as hÃ¡biles")
         ]
@@ -3594,7 +3565,7 @@ def get_performance_report(current_user=Depends(require_report_access)):
 
         roles_data = [
             ("Ventas", "Paso 1 (Levantamiento) & Paso 6 (Entrega)", f"{v_avg} dÃ­as hÃ¡biles"),
-            ("Líder Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", f"{l_avg} dÃ­as hÃ¡biles"),
+            ("LÃ­der Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", f"{l_avg} dÃ­as hÃ¡biles"),
             ("Analista de Costos", "Paso 4 (ElaboraciÃ³n de CotizaciÃ³n)", f"{c_avg} dÃ­as hÃ¡biles"),
             ("DirecciÃ³n General", "Paso 5 (RevisiÃ³n) & Paso 7 (Cierre)", f"{d_avg} dÃ­as hÃ¡biles")
         ]
@@ -3660,12 +3631,12 @@ def get_performance_report(current_user=Depends(require_report_access)):
     has_real_data = (v_avg + l_avg + c_avg + d_avg) > 0
     if not has_real_data:
         recoms = [
-            ("Estado General del SLA", "No existen registros de compuertas en proceso suficientes para emitir análisis de cuellos de botella. Registre y avance proyectos para generar mÃ©tricas de desempeÃ±o reales.")
+            ("Estado General del SLA", "No existen registros de compuertas en proceso suficientes para emitir anÃ¡lisis de cuellos de botella. Registre y avance proyectos para generar mÃ©tricas de desempeÃ±o reales.")
         ]
     else:
         role_map = [
             ("Analista de Costos - P4", c_avg),
-            ("Líder Regional - P2 & P3", l_avg),
+            ("LÃ­der Regional - P2 & P3", l_avg),
             ("Ventas - P1 & P6", v_avg),
             ("DirecciÃ³n General - P5 & P7", d_avg)
         ]
@@ -3683,33 +3654,6 @@ def get_performance_report(current_user=Depends(require_report_access)):
         run_title.bold = True
         run_title.font.color.rgb = RGBColor(194, 59, 34) if ("Oportunidad" in title or "CrÃ­tico" in title) else RGBColor(15, 76, 129)
         p_recom.add_run(desc)
-
-    # 4. Firmas de Cierre de AuditorÃ­a
-    doc.add_paragraph().paragraph_format.space_after = Pt(24)
-    h4 = doc.add_paragraph()
-    h4_run = h4.add_run("4. Firmas y Autorizaciones de AuditorÃ­a de SLA")
-    h4_run.bold = True
-    h4_run.font.size = Pt(12)
-    h4_run.font.color.rgb = RGBColor(15, 76, 129)
-
-    table_sign = doc.add_table(rows=1, cols=2)
-    table_sign.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table_sign.autofit = False
-
-    row_s = table_sign.rows[0]
-    cell_s1 = row_s.cells[0]
-    cell_s1.width = Inches(3.4)
-    p_s1 = cell_s1.paragraphs[0]
-    p_s1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_s1.paragraph_format.space_before = Pt(20)
-    p_s1.add_run("_________________________________\nIng. Noe Ortiz\nDirector General").font.size = Pt(9.5)
-
-    cell_s2 = row_s.cells[1]
-    cell_s2.width = Inches(3.4)
-    p_s2 = cell_s2.paragraphs[0]
-    p_s2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_s2.paragraph_format.space_before = Pt(20)
-    p_s2.add_run("_________________________________\nEquipo de IngenierÃ­a de Calidad Pro\nDC Control S.A. de C.V.").font.size = Pt(9.5)
 
     bio = io.BytesIO()
     doc.save(bio)
@@ -3744,14 +3688,14 @@ def open_project_folder(project_id: str, current_user=Depends(get_current_user))
         if not sharepoint_url:
             raise HTTPException(
                 status_code=404,
-                detail="No se encontró la carpeta SharePoint del proyecto"
+                detail="No se encontrÃ³ la carpeta SharePoint del proyecto"
             )
 
         return {
             "status": "success",
             "path": sharepoint_url,
             "url": sharepoint_url,
-            "message": "Ubicación SharePoint del proyecto"
+            "message": "UbicaciÃ³n SharePoint del proyecto"
         }
     finally:
         put_db_connection(conn)
