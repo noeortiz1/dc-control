@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   BarChart2, Bell, BellRing, Folder, Layers, Users, Settings, FileText, CheckCircle,
   AlertTriangle, RefreshCw, Sparkles, LogOut, ChevronRight, Upload,
@@ -65,7 +65,11 @@ const ESTADOS_MEXICO = {
 
 
 // Reusable Premium SVG Donut Chart
-const DonutChart = ({ data, totalText }) => {
+const DonutChart = ({ data, totalText, currencyMode = false }) => {
+  const formatValue = (value) =>
+    currencyMode
+      ? `$${Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+      : value;
   const total = data.reduce((acc, x) => acc + (x.value || 0), 0);
   let accumulatedPercent = 0;
 
@@ -102,7 +106,7 @@ const DonutChart = ({ data, totalText }) => {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">{totalText || 'Total'}</span>
-          <span className="text-sm font-black text-slate-900">{total}</span>
+          <span className="text-sm font-black text-slate-900">{formatValue(total)}</span>
         </div>
       </div>
       <div className="flex-1 space-y-1 text-xs">
@@ -112,7 +116,7 @@ const DonutChart = ({ data, totalText }) => {
               <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }}></span>
               <span className="font-semibold text-slate-700 truncate max-w-[100px]">{item.label}</span>
             </div>
-            <span className="font-bold text-slate-900 ml-2">{item.value} ({total > 0 ? ((item.value / total) * 100).toFixed(0) : 0}%)</span>
+            <span className="font-bold text-slate-900 ml-2">{currencyMode ? formatValue(item.value) : `${item.value} (${total > 0 ? ((item.value / total) * 100).toFixed(0) : 0}%)`}</span>
           </div>
         ))}
       </div>
@@ -219,6 +223,7 @@ export default function App() {
   const [emailSending, setEmailSending] = useState(false);
   const [reversalJustification, setReversalJustification] = useState('');
   const [p5ModificationJustification, setP5ModificationJustification] = useState('');
+  const [p4CatalogJustification, setP4CatalogJustification] = useState('');
   
 
   const safeProjectUploads = Array.isArray(projectUploads) ? projectUploads : [];
@@ -227,6 +232,7 @@ export default function App() {
   // Filters State
   const [dashboardFilter, setDashboardFilter] = useState('Todos');
   const [dashboardClientFilter, setDashboardClientFilter] = useState('Todos');
+  const [pipelineClientFilter, setPipelineClientFilter] = useState('Todos');
   const [auditFilter, setAuditFilter] = useState('Todos');
   const [clientsList, setClientsList] = useState([]);
   const [newClientName, setNewClientName] = useState('');
@@ -1076,10 +1082,14 @@ export default function App() {
     }
     const payload = {
       project_id: String(projectId || ''),
-      step: Number(isReversal ? reversalTarget : currentStep) || 1,
+      step: Number(currentStep) || 1,
       user_name: user?.full_name || user?.username || 'Usuario',
       user_role: user?.role || user?.puesto || 'Agente',
-      comments: String(isReversal ? (reversalJustification || '') : (stepComment || '')),
+      comments: String(
+        isReversal
+          ? (reversalComment || p5ModificationJustification || reversalJustification || '')
+          : (stepComment || '')
+      ),
       is_reversal: Boolean(isReversal)
     };
 
@@ -1092,6 +1102,10 @@ export default function App() {
       if (res.ok) {
         alert(isReversal ? 'Paso de compuerta regresado con éxito.' : 'Paso validado correctamente. La licitación avanzó de etapa.');
         setStepComment('');
+        if (isReversal) {
+          setReversalJustification('');
+          setP5ModificationJustification('');
+        }
         // One refresh only: reuse the response instead of querying /api/projects twice.
         const freshData = await fetchProjects();
         const updatedProj = freshData.find(p => p.id === projectId);
@@ -1379,6 +1393,53 @@ export default function App() {
 
   const semaforoWarnings = getDeliveryWarnings();
 
+  const getWorkloadData = () => {
+    const workload = {};
+
+    (projects || []).forEach(p => {
+      if (p.status !== 'En Proceso') return;
+
+      const stage = Number(p.current_stage || 1);
+      let responsible = '';
+
+      if (stage === 1 || stage === 6) {
+        responsible = p.assigned_ventas || 'Sin asignar';
+      } else if (stage === 2) {
+        responsible = [p.assigned_ventas, p.assigned_lider].filter(Boolean).join(' / ') || 'Sin asignar';
+      } else if (stage === 3) {
+        responsible = p.assigned_lider || 'Sin asignar';
+      } else if (stage === 4) {
+        responsible = p.assigned_costos || 'Sin asignar';
+      } else {
+        responsible = 'Dirección General';
+      }
+
+      const task = {
+        id: p.id,
+        name: p.name || 'Sin nombre',
+        stage,
+        responsible,
+        target_date: p.target_date || null
+      };
+
+      const key = responsible;
+
+      if (!workload[key]) {
+        workload[key] = {
+          responsible: key,
+          count: 0,
+          tasks: []
+        };
+      }
+
+      workload[key].count += 1;
+      workload[key].tasks.push(task);
+    });
+
+    return Object.values(workload).sort((a, b) => b.count - a.count);
+  };
+
+  const workloadData = getWorkloadData();
   const handleOpenFolder = async (projId) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/open-folder/${projId}`);
@@ -1556,6 +1617,15 @@ export default function App() {
               >
                 <Layers size={16} />
                 <span>📈 Desempeño</span>
+              </button>
+            )}
+            {isAdminOrDirector && (
+              <button
+                onClick={() => { setActiveTab('carga'); setSelectedProject(null); }}
+                className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'carga' ? 'bg-[#0F4C81] text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+              >
+                <span className="text-sm">📅</span>
+                <span>📅 Carga Laboral</span>
               </button>
             )}
             {hasPrivilege('projects') && <button 
@@ -1805,7 +1875,7 @@ export default function App() {
                     <p className="text-[10px] text-slate-500">Muestra el estatus de las cotizaciones activas de forma secuencial.</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-[10px] text-slate-500">Licitación:</span>
+                    <span className="text-[10px] text-slate-500">Cliente:</span><select value={pipelineClientFilter} onChange={(e) => setPipelineClientFilter(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-[#0F4C81]"><option value="Todos">Todos</option>{Array.from(new Set([...clientsList.map(c => typeof c === "string" ? c : c.name), ...projects.map(p => String(p.client || "").trim()).filter(Boolean)])).sort().map(client => (<option key={client} value={client}>{client}</option>))}</select><span className="text-[10px] text-slate-500">Licitación:</span>
                     <select
                       value={dashboardFilter}
                       onChange={(e) => setDashboardFilter(e.target.value)}
@@ -1833,7 +1903,8 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filteredProjects
+                      {projects
+                        .filter(p => pipelineClientFilter === 'Todos' || String(p.client || '').trim() === pipelineClientFilter)
                         .filter(p => dashboardFilter === 'Todos' || p.id === dashboardFilter)
                         .map(p => (
                           <tr key={p.id} className="hover:bg-slate-100/50 transition">
@@ -1886,6 +1957,7 @@ export default function App() {
                       <DonutChart
                         totalText="Ganado"
                         data={dashboardMetrics.won_amount_by_state || []}
+                        currencyMode={true}
                       />
                     </div>
                   </div>
@@ -1901,12 +1973,12 @@ export default function App() {
                         }));
                         const maxCount = Math.max(...stepsCount.map(s => s.count), 1);
                         return (
-                          <div className="flex items-end justify-between h-28 pt-4 px-1 border-b border-slate-200">
+                          <div className="flex items-end justify-between h-40 pt-5 px-2 border-b border-slate-200">
                             {stepsCount.map((s, idx) => {
                               const heightPercent = (s.count / maxCount) * 100;
                               return (
                                 <div key={idx} className="flex flex-col items-center flex-1 group">
-                                  <span className="text-[9px] font-bold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity mb-1">{s.count}</span>
+                                  <span className="text-[11px] font-black text-slate-800 mb-1">{s.count}</span>
                                   <div 
                                     className="w-3 bg-[#0F4C81] rounded-t hover:bg-[#C23B22] transition-all cursor-pointer" 
                                     style={{ height: `${Math.max(6, heightPercent)}%` }}
@@ -1965,31 +2037,60 @@ export default function App() {
                       })()}
                     </div>
 
-                    {/* Bar Chart 5: Desfase por Proyecto Perdido (%) */}
+                    {/* Gráfica: Desfase por Proyecto Perdido (%) */}
                     <div className="border border-slate-100 p-4 rounded-lg bg-slate-50 col-span-1 lg:col-span-2">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-2">📉 Porcentaje de Desfase por Proyecto Perdido</span>
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-3">
+                        📉 Porcentaje de Desfase por Proyecto Perdido
+                      </span>
+
                       {(() => {
                         const lostProjects = dashboardMetrics.lost_projects || [];
+
                         if (lostProjects.length === 0) {
-                          return <p className="text-[10px] text-slate-500 italic w-full text-center py-8">No hay cotizaciones 'Perdidas' con desfase financiero registrado.</p>;
+                          return (
+                            <p className="text-[10px] text-slate-500 italic w-full text-center py-8">
+                              No hay cotizaciones 'Perdidas' con desfase financiero registrado.
+                            </p>
+                          );
                         }
-                        const maxGap = Math.max(...lostProjects.map(p => p.lose_percentage_gap || 0), 1);
+
+                        const chartData = lostProjects
+                          .map((p) => ({
+                            id: p.id,
+                            name: p.name || p.id,
+                            gap: Number(p.gap || 0),
+                          }))
+                          .sort((a, b) => b.gap - a.gap);
+
+                        const maxGap = Math.max(...chartData.map((p) => p.gap), 1);
+
                         return (
-                          <div className="space-y-2 max-h-40 overflow-y-auto pr-1 pt-2">
-                            {lostProjects.map((p, idx) => {
-                              const gapVal = p.gap || 0;
-                              const widthPercent = (gapVal / maxGap) * 100;
+                          <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
+                            {chartData.map((p, idx) => {
+                              const widthPercent = Math.max((p.gap / maxGap) * 100, p.gap > 0 ? 4 : 0);
+
                               return (
-                                <div key={idx} className="flex items-center space-x-3 text-[10px]">
-                                  <span className="w-16 font-mono text-[#0F4C81] font-bold truncate" title={p.id}>{p.id}</span>
-                                  <div className="flex-1 bg-slate-200 h-3 rounded overflow-hidden relative">
-                                    <div 
-                                      className="bg-[#C23B22] h-full rounded-l hover:bg-[#a82a1b] transition-all" 
-                                      style={{ width: `${widthPercent}%` }}
-                                      title={`${p.name || ''}: ${gapVal}%`}
-                                    ></div>
+                                <div key={`${p.id}-${idx}`} className="space-y-1">
+                                  <div className="flex items-center justify-between gap-3 text-[10px]">
+                                    <span
+                                      className="font-mono text-[#0F4C81] font-bold truncate"
+                                      title={p.name}
+                                    >
+                                      {p.id}
+                                    </span>
+
+                                    <span className="font-black text-slate-700 shrink-0">
+                                      {p.gap.toFixed(1)}%
+                                    </span>
                                   </div>
-                                  <span className="w-12 text-right font-black text-slate-700">{gapVal.toFixed(1)}%</span>
+
+                                  <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                                    <div
+                                      className="bg-[#C23B22] h-full rounded-full transition-all"
+                                      style={{ width: `${widthPercent}%` }}
+                                      title={`${p.name}: ${p.gap.toFixed(1)}%`}
+                                    />
+                                  </div>
                                 </div>
                               );
                             })}
@@ -2013,7 +2114,7 @@ export default function App() {
                         
                         const maxStateCount = Math.max(...statesData.map(s => s.count), 1);
                         return (
-                          <div className="flex items-end justify-between h-28 pt-4 px-1 border-b border-slate-200">
+                          <div className="flex items-end justify-between h-40 pt-5 px-2 border-b border-slate-200">
                             {statesData.length === 0 ? (
                               <p className="text-[10px] text-slate-500 italic w-full text-center pb-6">Sin licitaciones ganadas aún.</p>
                             ) : (
@@ -2021,13 +2122,13 @@ export default function App() {
                                 const heightPercent = (s.count / maxStateCount) * 100;
                                 return (
                                   <div key={idx} className="flex flex-col items-center flex-1 group">
-                                    <span className="text-[9px] font-bold text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity mb-1">{s.count}</span>
+                                    <span className="text-[11px] font-black text-slate-800 mb-1">{s.count}</span>
                                     <div 
-                                      className="w-3 bg-emerald-500 rounded-t hover:bg-[#0F4C81] transition-all cursor-pointer" 
-                                      style={{ height: `${Math.max(6, heightPercent)}%` }}
+                                      className="w-8 bg-emerald-500 rounded-t hover:bg-[#0F4C81] transition-all cursor-pointer" 
+                                      style={{ height: `${Math.max(20, Math.round((s.count / maxStateCount) * 120))}px` }}
                                       title={`${s.state}: ${s.count}`}
                                     ></div>
-                                    <span className="text-[8px] font-black text-slate-500 mt-1 truncate max-w-[32px]" title={s.state}>{s.state}</span>
+                                    <span className="text-[9px] font-black text-slate-600 mt-2 text-center leading-tight truncate w-full" title={s.state}>{s.state}</span>
                                   </div>
                                 );
                               })
@@ -2076,6 +2177,8 @@ export default function App() {
                     )}
                   </div>
                 </div>
+
+
 
               </div>
 
@@ -2143,18 +2246,113 @@ export default function App() {
                       <>
                         {slaMetrics.maxRole && (
                           <p className="text-xs text-slate-800 leading-relaxed bg-[#C23B22]/10 border border-[#C23B22]/20 p-4 rounded-lg">
-                            ⚠️ <strong>Área de oportunidad principal ({slaMetrics.maxRole.name}):</strong> Presenta el mayor tiempo de respuesta con {slaMetrics.maxRole.str} promedio. Se recomienda agilizar el procesamiento de sus compuertas para optimizar el SLA comercial.
+                            ⚠️ <strong>Área de oportunidad principal ({slaMetrics.maxRole.name}):</strong> Concentra el mayor tiempo promedio registrado, con {slaMetrics.maxRole.str}. Se recomienda revisar las actividades asociadas a esta etapa para identificar oportunidades de agilización.
                           </p>
                         )}
                         {slaMetrics.minRole && (
                           <p className="text-xs text-slate-800 leading-relaxed bg-emerald-50 border border-emerald-100 p-4 rounded-lg">
-                            ✔️ <strong>Desempeño destacado ({slaMetrics.minRole.name}):</strong> Mantiene el mejor tiempo de respuesta con {slaMetrics.minRole.str} promedio en sus revisiones.
+                            ✔️ <strong>Desempeño destacado ({slaMetrics.minRole.name}):</strong> Presenta el menor tiempo promedio registrado, con {slaMetrics.minRole.str}, reflejando una respuesta más ágil dentro del flujo analizado.
                           </p>
                         )}
                       </>
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: CARGA LABORAL */}
+          {activeTab === 'carga' && isAdminOrDirector && (
+            <div className="space-y-6">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm text-slate-800">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-4 mb-6">
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                      📅 Carga Laboral Activa
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Proyectos actualmente en proceso y responsable de la etapa activa.
+                    </p>
+                  </div>
+
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full">
+                    {workloadData.reduce((total, item) => total + item.count, 0)} tareas activas
+                  </span>
+                </div>
+
+                {workloadData.length === 0 ? (
+                  <div className="p-8 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-500 text-center">
+                    No hay tareas activas en este momento.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-left">
+                          <th className="pb-3 pr-4 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                            Responsable
+                          </th>
+                          <th className="pb-3 px-4 text-[10px] uppercase tracking-wider text-slate-500 font-bold text-center">
+                            Tareas activas
+                          </th>
+                          <th className="pb-3 px-4 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                            Proyecto
+                          </th>
+                          <th className="pb-3 px-4 text-[10px] uppercase tracking-wider text-slate-500 font-bold text-center">
+                            Paso
+                          </th>
+                          <th className="pb-3 pl-4 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                            Próximo vencimiento
+                          </th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {workloadData.map((item, idx) => {
+                          const nextDue = item.tasks
+                            .map(task => task.target_date)
+                            .filter(Boolean)
+                            .sort()[0];
+
+                          return (
+                            <React.Fragment key={idx}>
+                              <tr className="border-b border-slate-100">
+                                <td className="py-3 pr-4 font-bold text-slate-800">
+                                  {item.responsible}
+                                </td>
+
+                                <td className="py-3 px-4 text-center">
+                                  <span className="inline-flex min-w-[28px] justify-center px-2 py-1 rounded-full bg-[#0F4C81] text-white font-bold">
+                                    {item.count}
+                                  </span>
+                                </td>
+
+                                <td className="py-3 px-4 text-slate-700">
+                                  {item.tasks.map(task => task.name).join(', ')}
+                                </td>
+
+                                <td className="py-3 px-4 text-center text-slate-600">
+                                  {item.tasks.map(task => `P${task.stage}`).join(', ')}
+                                </td>
+
+                                <td className="py-3 pl-4 text-slate-600">
+                                  {nextDue
+                                    ? new Date(nextDue).toLocaleDateString('es-MX', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric'
+                                      })
+                                    : 'Sin fecha'}
+                                </td>
+                              </tr>
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2962,15 +3160,6 @@ export default function App() {
                                         </a>
                                       );
                                     })()}
-                                    <button 
-                                      onClick={() => {
-                                        const sharepointUrl = f.sharepoint_web_url || `https://ingenieriadc.sharepoint.com/sites/SalesHubDCControl/${selectedProject.id}/${f.filename}`;
-                                        window.open(sharepointUrl, '_blank');
-                                      }}
-                                      className="bg-[#0F4C81]/10 text-[#0F4C81] border border-[#0F4C81]/20 hover:bg-[#0F4C81] hover:text-white font-bold px-2.5 py-1.5 rounded transition-all text-[10px]"
-                                    >
-                                      Ver en Línea 🌐
-                                    </button>
                                     {(f.uploaded_by === user.full_name || isStrictAdmin) && activeStepTab === selectedProject.current_stage && (
                                       <button 
                                         onClick={() => handleWipeUserUpload(f.id, selectedProject.id)}
@@ -2994,7 +3183,7 @@ export default function App() {
                         <div className="space-y-4 pt-2">
                           
                           {/* 1. Evidence upload box (only for steps 1-6 since step 7 is won/lost closure) */}
-                          {selectedProject.current_stage < 7 && (
+                          {selectedProject.current_stage < 7 && selectedProject.current_stage !== 5 && (
                             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
                             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                               {selectedProject.current_stage === 6
@@ -3173,8 +3362,8 @@ export default function App() {
     </div>
 
     <textarea
-      value={stepComment}
-      onChange={(e) => setStepComment(e.target.value)}
+      value={p4CatalogJustification}
+      onChange={(e) => setP4CatalogJustification(e.target.value)}
       placeholder="Indica brevemente que falta en el catalogo..."
       className="w-full bg-white border border-red-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-400"
       rows="3"
@@ -3183,7 +3372,7 @@ export default function App() {
     <button
       type="button"
       onClick={async () => {
-        const motivo = String(stepComment || '').trim();
+        const motivo = String(p4CatalogJustification || '').trim();
 
         if (!motivo) {
           alert('Indica brevemente que falta en el catalogo.');
@@ -3210,7 +3399,7 @@ export default function App() {
           }
 
           alert('El proyecto regreso al Paso 3 correctamente.');
-          setStepComment('');
+          setP4CatalogJustification('');
 
           setSelectedProject({
             ...selectedProject,
@@ -3281,7 +3470,7 @@ export default function App() {
   />
   <button
     onClick={() => {
-      if (!reversalJustification.trim()) {
+      if (!p5ModificationJustification.trim()) {
         alert('Justificación de modificaciones requerida.');
         return;
       }
@@ -3433,11 +3622,11 @@ export default function App() {
                 <h3 className="font-bold text-xs uppercase tracking-wider text-[#FDAB3D] mb-4 flex justify-between border-b border-slate-200 pb-2">
                   <span>⏳ En Proceso</span>
                   <span className="bg-amber-400/10 text-[#FDAB3D] text-[10px] px-2 py-0.5 rounded font-bold">
-                    {filteredProjects.filter(p => p.status === 'En Proceso').length}
+                    {projects.filter(p => p.status === 'En Proceso').length}
                   </span>
                 </h3>
                 <div className="space-y-3">
-                  {filteredProjects.filter(p => p.status === 'En Proceso').map(p => (
+                  {projects.filter(p => p.status === 'En Proceso').map(p => (
                     <div 
                       key={p.id} 
                       onClick={() => { setSelectedProject(p); setActiveTab('seguimiento'); fetchProjectUploads(p.id); }}
@@ -3460,11 +3649,11 @@ export default function App() {
                 <h3 className="font-bold text-xs uppercase tracking-wider text-emerald-400 mb-4 flex justify-between border-b border-slate-200 pb-2">
                   <span>✔️ Ganados</span>
                   <span className="bg-emerald-400/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded font-bold">
-                    {filteredProjects.filter(p => p.status === 'Ganado').length}
+                    {projects.filter(p => p.status === 'Ganado').length}
                   </span>
                 </h3>
                 <div className="space-y-3">
-                  {filteredProjects.filter(p => p.status === 'Ganado').map(p => (
+                  {projects.filter(p => p.status === 'Ganado').map(p => (
                     <div 
                       key={p.id} 
                       onClick={() => { setSelectedProject(p); setActiveTab('seguimiento'); fetchProjectUploads(p.id); }}
@@ -3487,11 +3676,11 @@ export default function App() {
                 <h3 className="font-bold text-xs uppercase tracking-wider text-red-400 mb-4 flex justify-between border-b border-slate-200 pb-2">
                   <span>🚨 Perdidos / Cancelados</span>
                   <span className="bg-red-400/10 text-red-400 text-[10px] px-2 py-0.5 rounded font-bold">
-                    {filteredProjects.filter(p => p.status === 'Perdido' || p.status === 'Cancelado').length}
+                    {projects.filter(p => p.status === 'Perdido' || p.status === 'Cancelado').length}
                   </span>
                 </h3>
                 <div className="space-y-3">
-                  {filteredProjects.filter(p => p.status === 'Perdido' || p.status === 'Cancelado').map(p => (
+                  {projects.filter(p => p.status === 'Perdido' || p.status === 'Cancelado').map(p => (
                     <div 
                       key={p.id} 
                       onClick={() => { setSelectedProject(p); setActiveTab('seguimiento'); fetchProjectUploads(p.id); }}
@@ -4046,3 +4235,26 @@ export default function App() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

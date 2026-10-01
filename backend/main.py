@@ -123,38 +123,38 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ESTADOS_MEXICO = {
-    "CDMX": "LÃ­der Regional - Sur",
-    "Estado de MÃ©xico": "LÃ­der Regional - Sur",
-    "QuerÃ©taro": "LÃ­der Regional - Sur",
-    "Guanajuato": "LÃ­der Regional - Sur",
-    "Jalisco": "LÃ­der Regional - Sur",
-    "MichoacÃ¡n": "LÃ­der Regional - Sur",
-    "Puebla": "LÃ­der Regional - Sur",
-    "Veracruz": "LÃ­der Regional - Sur",
-    "Hidalgo": "LÃ­der Regional - Sur",
-    "Morelos": "LÃ­der Regional - Sur",
-    "Guerrero": "LÃ­der Regional - Sur",
-    "Oaxaca": "LÃ­der Regional - Sur",
-    "Chiapas": "LÃ­der Regional - Sur",
-    "Tabasco": "LÃ­der Regional - Sur",
-    "Campeche": "LÃ­der Regional - Sur",
-    "YucatÃ¡n": "LÃ­der Regional - Sur",
-    "Quintana Roo": "LÃ­der Regional - Sur",
-    "Tlaxcala": "LÃ­der Regional - Sur",
-    "Colima": "LÃ­der Regional - Sur",
-    "Nayarit": "LÃ­der Regional - Sur",
-    "Nuevo LeÃ³n": "LÃ­der Regional - Norte",
-    "Chihuahua": "LÃ­der Regional - Norte",
-    "Coahuila": "LÃ­der Regional - Norte",
-    "Sonora": "LÃ­der Regional - Norte",
-    "Baja California": "LÃ­der Regional - Norte",
-    "Baja California Sur": "LÃ­der Regional - Norte",
-    "San Luis PotosÃ­": "LÃ­der Regional - Norte",
-    "Aguascalientes": "LÃ­der Regional - Norte",
-    "Durango": "LÃ­der Regional - Norte",
-    "Sinaloa": "LÃ­der Regional - Norte",
-    "Zacatecas": "LÃ­der Regional - Norte",
-    "Tamaulipas": "LÃ­der Regional - Norte"
+    "CDMX": "Líder Regional - Sur",
+    "Estado de México": "Líder Regional - Sur",
+    "Querétaro": "Líder Regional - Sur",
+    "Guanajuato": "Líder Regional - Sur",
+    "Jalisco": "Líder Regional - Sur",
+    "Michoacán": "Líder Regional - Sur",
+    "Puebla": "Líder Regional - Sur",
+    "Veracruz": "Líder Regional - Sur",
+    "Hidalgo": "Líder Regional - Sur",
+    "Morelos": "Líder Regional - Sur",
+    "Guerrero": "Líder Regional - Sur",
+    "Oaxaca": "Líder Regional - Sur",
+    "Chiapas": "Líder Regional - Sur",
+    "Tabasco": "Líder Regional - Sur",
+    "Campeche": "Líder Regional - Sur",
+    "Yucatán": "Líder Regional - Sur",
+    "Quintana Roo": "Líder Regional - Sur",
+    "Tlaxcala": "Líder Regional - Sur",
+    "Colima": "Líder Regional - Sur",
+    "Nayarit": "Líder Regional - Sur",
+    "Nuevo León": "Líder Regional - Norte",
+    "Chihuahua": "Líder Regional - Norte",
+    "Coahuila": "Líder Regional - Norte",
+    "Sonora": "Líder Regional - Norte",
+    "Baja California": "Líder Regional - Norte",
+    "Baja California Sur": "Líder Regional - Norte",
+    "San Luis Potosí": "Líder Regional - Norte",
+    "Aguascalientes": "Líder Regional - Norte",
+    "Durango": "Líder Regional - Norte",
+    "Sinaloa": "Líder Regional - Norte",
+    "Zacatecas": "Líder Regional - Norte",
+    "Tamaulipas": "Líder Regional - Norte"
 }
 
 # Connection pool
@@ -1379,9 +1379,6 @@ def get_projects(current_user=Depends(get_current_user)):
                 step5_completed, step6_completed, step6_completed_date,
                 sharepoint_folder_url
                 FROM projects
-                WHERE assigned_ventas IN (%s, %s, %s)
-                   OR assigned_lider IN (%s, %s, %s)
-                   OR assigned_costos IN (%s, %s, %s)
                 ORDER BY id DESC
             """, (full_name, username, role, full_name, username, role, full_name, username, role))
         return [dict(row) for row in cursor.fetchall()]
@@ -1644,7 +1641,7 @@ def get_dashboard_summary(current_user=Depends(get_current_user)):
 def create_project(req: CreateProjectRequest, current_user=Depends(require_admin)):
     # Generates next project ID matching logic of generate_next_project_id
     year_month = datetime.now().strftime("%Y%m")
-    region_auto = ESTADOS_MEXICO.get(req.state, "LÃ­der Regional - Sur")
+    region_auto = ESTADOS_MEXICO.get(req.state, "Líder Regional - Sur")
     zone_auto = "S" if "Sur" in region_auto else "N"
     prefix = f"DCC-{year_month}-{zone_auto}-"
 
@@ -1698,7 +1695,7 @@ def create_project(req: CreateProjectRequest, current_user=Depends(require_admin
             leader_db = cursor.fetchone()
             assigned_leader = leader_db['full_name'] if leader_db else region_auto
 
-        final_ventas = assigned_leader if req.comm_responsibility == "LÃ­der Regional" else req.assigned_ventas
+        final_ventas = assigned_leader if req.comm_responsibility == "Líder Regional" else req.assigned_ventas
 
         init_stage = 7 if req.skip_to_cierre else 1
         s1 = 1 if req.skip_to_cierre else 0
@@ -1784,7 +1781,7 @@ def edit_project(proj_id: str, req: EditProjectRequest, current_user=Depends(req
 
         # Determine sales assignment
         assigned_leader_val = req.assigned_lider if req.assigned_lider else p_details['assigned_lider']
-        edit_ventas_val = assigned_leader_val if req.comm_responsibility == "LÃ­der Regional" else req.assigned_ventas
+        edit_ventas_val = assigned_leader_val if req.comm_responsibility == "Líder Regional" else req.assigned_ventas
 
         cursor.execute('''
             UPDATE projects
@@ -2135,6 +2132,18 @@ def update_step_action(req: StepActionRequest, current_user=Depends(get_current_
 
             # P2 -> P3: Ventas + Lider + evidencia.
             elif current_stage == 2:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM uploads WHERE project_id = %s AND step_name = %s",
+                    (req.project_id, "Paso 2")
+                )
+                minuta_count = cursor.fetchone()[0]
+
+                if minuta_count == 0:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Primero debes cargar la minuta antes de avanzar del Paso 2"
+                    )
+
                 cursor.execute("""
                     SELECT step2_ventas_done, step2_lider_done, step2_completed
                     FROM projects WHERE id = %s
@@ -2302,7 +2311,7 @@ def confirm_step2_reunion(project_id: str = Form(...), user_role: str = Form(...
                 if p.get('step2_lider_done') == 1:
                     raise HTTPException(
                         status_code=400,
-                        detail="La confirmaciÃ³n del LÃ­der Regional para el Paso 2 ya fue realizada"
+                        detail="La confirmaciÃ³n del Líder Regional para el Paso 2 ya fue realizada"
                     )
 
                 cursor.execute(
@@ -3135,7 +3144,7 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
         ("Cliente", str(p['client'])),
         ("Estado de la RepÃºblica", f"{p['state']} ({p['zone']})"),
         ("Agente de Ventas Responsable", str(p['assigned_ventas'])),
-        ("LÃ­der Regional Responsable", str(p['assigned_lider'])),
+        ("Líder Regional Responsable", str(p['assigned_lider'])),
         ("Analista de Costos Asignado", str(p['assigned_costos'])),
         ("Prioridad de AtenciÃ³n", str(p['priority'])),
         ("Monto Final Cotizado", f"${p['final_amount']:,.2f}"),
@@ -3181,7 +3190,7 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
 
     gates_details = [
         ("Compuerta 1: Levantamiento TÃ©cnico de Obra (P1)", "Validado" if p['step1_completed'] == 1 else "Pendiente", "Estudio de viabilidad inicial y alcances de la obra."),
-        ("Compuerta 2: Minuta de Trabajo y ConfirmaciÃ³n (P2)", "Validado" if p['step2_completed'] == 1 else "Pendiente", "AlineaciÃ³n comercial. ConfirmaciÃ³n de Ventas y LÃ­der Regional."),
+        ("Compuerta 2: Minuta de Trabajo y ConfirmaciÃ³n (P2)", "Validado" if p['step2_completed'] == 1 else "Pendiente", "AlineaciÃ³n comercial. ConfirmaciÃ³n de Ventas y Líder Regional."),
         ("Compuerta 3: CatÃ¡logo de Conceptos e IngenierÃ­a (P3)", "Validado" if p['step3_completed'] == 1 else "Pendiente", "Estructura tÃ©cnica de conceptos de obra."),
         ("Compuerta 4: CotizaciÃ³n de Precios y Utilidades (P4)", "Validado" if p['step4_completed'] == 1 else "Pendiente", "ElaboraciÃ³n de costos unitarios y utilidades."),
         ("Compuerta 5: AprobaciÃ³n de DirecciÃ³n General (P5)", "Validado" if p['step5_completed'] == 1 else "Pendiente", "RevisiÃ³n ejecutiva y autorizaciÃ³n de propuesta."),
@@ -3324,7 +3333,7 @@ def get_project_dossier(project_id: str, current_user=Depends(require_report_acc
     table_sign.autofit = False
     
     sign_pax = [
-        ("_____________________________________\nAgente de Ventas Asignado", "_____________________________________\nLÃ­der Regional Asignado"),
+        ("_____________________________________\nAgente de Ventas Asignado", "_____________________________________\nLíder Regional Asignado"),
         ("_____________________________________\nAnalista de Costos Responsable", "_____________________________________\nDirecciÃ³n General (Noe Ortiz)")
     ]
 
@@ -3407,7 +3416,7 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
         cell_text(t.rows[i].cells[0],label,True); shade(t.rows[i].cells[0],"F3F4F6"); cell_text(t.rows[i].cells[1],val)
 
     section_title("2. Lista de asistencia requerida")
-    attendees=[("Agente de Ventas",str(p['assigned_ventas'] or "")),("LÃ­der Regional",str(p['assigned_lider'] or "")),
+    attendees=[("Agente de Ventas",str(p['assigned_ventas'] or "")),("Líder Regional",str(p['assigned_lider'] or "")),
                ("Analista de Costos",str(p['assigned_costos'] or "")),("Cliente / Contacto",""),("Participante adicional","")]
     t=doc.add_table(rows=len(attendees)+1,cols=5)
     for j,h in enumerate(["Rol / participante","Nombre","Asistencia","Hora","Firma"]):
@@ -3449,7 +3458,7 @@ def get_prefilled_minute(project_id: str, current_user=Depends(require_report_ac
     section_title("7. ConfirmaciÃ³n de la reuniÃ³n")
     doc.add_paragraph("Los participantes confirman que los acuerdos y pendientes anteriores reflejan lo tratado durante la reuniÃ³n.")
     t=doc.add_table(rows=2,cols=3)
-    for j,h in enumerate(["Ventas","LÃ­der Regional","Cliente / Participante"]):
+    for j,h in enumerate(["Ventas","Líder Regional","Cliente / Participante"]):
         cell_text(t.rows[0].cells[j],h,True); shade(t.rows[0].cells[j],"F3F4F6")
         cell_text(t.rows[1].cells[j],"\n\n________________________\nNombre y firma")
 
@@ -3553,7 +3562,7 @@ def get_performance_report(current_user=Depends(require_report_access)):
         v_avg = l_avg = c_avg = d_avg = 0.0
         roles_data = [
             ("Ventas", "Paso 1 (Levantamiento) & Paso 6 (Entrega)", "0.0 dÃ­as hÃ¡biles"),
-            ("LÃ­der Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", "0.0 dÃ­as hÃ¡biles"),
+            ("Líder Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", "0.0 dÃ­as hÃ¡biles"),
             ("Analista de Costos", "Paso 4 (ElaboraciÃ³n de CotizaciÃ³n)", "0.0 dÃ­as hÃ¡biles"),
             ("DirecciÃ³n General", "Paso 5 (RevisiÃ³n) & Paso 7 (Cierre)", "0.0 dÃ­as hÃ¡biles")
         ]
@@ -3585,7 +3594,7 @@ def get_performance_report(current_user=Depends(require_report_access)):
 
         roles_data = [
             ("Ventas", "Paso 1 (Levantamiento) & Paso 6 (Entrega)", f"{v_avg} dÃ­as hÃ¡biles"),
-            ("LÃ­der Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", f"{l_avg} dÃ­as hÃ¡biles"),
+            ("Líder Regional", "Paso 2 (Minuta) & Paso 3 (CatÃ¡logo)", f"{l_avg} dÃ­as hÃ¡biles"),
             ("Analista de Costos", "Paso 4 (ElaboraciÃ³n de CotizaciÃ³n)", f"{c_avg} dÃ­as hÃ¡biles"),
             ("DirecciÃ³n General", "Paso 5 (RevisiÃ³n) & Paso 7 (Cierre)", f"{d_avg} dÃ­as hÃ¡biles")
         ]
@@ -3656,7 +3665,7 @@ def get_performance_report(current_user=Depends(require_report_access)):
     else:
         role_map = [
             ("Analista de Costos - P4", c_avg),
-            ("LÃ­der Regional - P2 & P3", l_avg),
+            ("Líder Regional - P2 & P3", l_avg),
             ("Ventas - P1 & P6", v_avg),
             ("DirecciÃ³n General - P5 & P7", d_avg)
         ]
@@ -3783,16 +3792,6 @@ def admin_update_user(username: str, req: AdminUserUpdateRequest, current_user=D
         put_db_connection(conn)
 
 
-# Servir frontend React/Vite desde el mismo Web Service de Render
-DIST_DIR = Path(__file__).resolve().parent.parent / "dist"
-if DIST_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(DIST_DIR), html=True), name="frontend")
-
-if __name__ == "__main__":
-    import uvicorn
-    host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", "8000"))
-    uvicorn.run("main:app", host=host, port=port, reload=False)
 @app.post("/api/projects/p4-return-p3")
 def p4_return_to_p3(project_id: str, comments: str = "", current_user=Depends(get_current_user)):
     conn = get_db_connection()
@@ -3870,3 +3869,15 @@ def p4_return_to_p3(project_id: str, comments: str = "", current_user=Depends(ge
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         put_db_connection(conn)
+
+# Servir frontend React/Vite desde el mismo Web Service de Render
+DIST_DIR = Path(__file__).resolve().parent.parent / "dist"
+if DIST_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(DIST_DIR), html=True), name="frontend")
+
+
+if __name__ == "__main__":
+    import uvicorn
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("main:app", host=host, port=port, reload=False)
