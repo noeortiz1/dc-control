@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart2, Bell, BellRing, Folder, Layers, Users, Settings, FileText, CheckCircle,
   AlertTriangle, RefreshCw, Sparkles, LogOut, ChevronRight, Upload,
@@ -133,6 +133,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [projects, setProjects] = useState([]);
   const [dashboardSummary, setDashboardSummary] = useState(null);
+  const [stepCommentHistory, setStepCommentHistory] = useState([]);
+  const [recentCommentHistory, setRecentCommentHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [msConnected, setMsConnected] = useState(null);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -250,8 +252,22 @@ export default function App() {
       );
     } else {
       setFinalAmountEdit('');
+      setStepCommentHistory([]);
     }
   }, [selectedProject]);
+
+  // Historial visible del paso seleccionado: solo comentarios de pasos anteriores.
+  useEffect(() => {
+    let cancelled = false;
+    if (!selectedProject || Number(activeStepTab) <= 1) {
+      setStepCommentHistory([]);
+      return () => { cancelled = true; };
+    }
+    fetchProjectCommentHistory(selectedProject.id, Number(activeStepTab))
+      .then(items => { if (!cancelled) setStepCommentHistory(items); })
+      .catch(() => { if (!cancelled) setStepCommentHistory([]); });
+    return () => { cancelled = true; };
+  }, [selectedProject?.id, activeStepTab]);
 
   // Load user session on boot
   useEffect(() => {
@@ -274,6 +290,26 @@ export default function App() {
       setMyProfileEmail(user.email || '');
     }
   }, [user]);
+
+  // El panel ejecutivo muestra los comentarios más recientes usando la misma API de historial.
+  useEffect(() => {
+    let cancelled = false;
+    if (!user || activeTab !== 'dashboard' || !projects.length) {
+      setRecentCommentHistory([]);
+      return () => { cancelled = true; };
+    }
+    const candidates = dashboardVisibleProjects.slice(0, 8);
+    Promise.all(candidates.map(p =>
+      fetchProjectCommentHistory(p.id, 8)
+        .then(items => items.map(item => ({ ...item, project_id: p.id, project_name: p.name || p.id })))
+        .catch(() => [])
+    )).then(groups => {
+      if (cancelled) return;
+      const merged = groups.flat().sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+      setRecentCommentHistory(merged.slice(0, 8));
+    });
+    return () => { cancelled = true; };
+  }, [user, activeTab, projects, dashboardClientFilter, dashboardFilter]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -349,6 +385,20 @@ export default function App() {
     } catch (err) {
       console.error("Error al obtener resumen global:", err);
       setDashboardSummary(null);
+    }
+  };
+
+  const fetchProjectCommentHistory = async (projectId, beforeStep = null) => {
+    if (!projectId) return [];
+    try {
+      const query = beforeStep ? `?before_step=${encodeURIComponent(beforeStep)}` : '';
+      const res = await fetch(`${API_BASE_URL}/api/projects/${encodeURIComponent(projectId)}/comments${query}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data.history) ? data.history : [];
+    } catch (err) {
+      console.error('Error al obtener historial de comentarios:', err);
+      return [];
     }
   };
 
@@ -1310,7 +1360,7 @@ export default function App() {
     dashboardClientFilter === 'Todos' || String(p.client || '').trim() === dashboardClientFilter
   );
 
-  const dashboardMetrics = (() => {
+  const dashboardMetricsLocal = (() => {
     const rows = dashboardVisibleProjects;
     const total = rows.length;
     const totalQuoted = rows.reduce((s, p) => s + (Number(p.final_amount) || 0), 0);
@@ -1368,6 +1418,13 @@ export default function App() {
     };
   })();
 
+  // El Dashboard usa el resumen real del backend cuando no hay filtros locales.
+  // Si el usuario filtra cliente/licitación, conservamos el comportamiento existente
+  // usando el cálculo local sobre los proyectos filtrados.
+  const dashboardMetrics = (dashboardSummary && dashboardClientFilter === 'Todos' && dashboardFilter === 'Todos')
+    ? dashboardSummary
+    : dashboardMetricsLocal;
+
   // Calculate Semáforo / Alert system exactly as python:
   const getDeliveryWarnings = () => {
     const warnings = [];
@@ -1383,7 +1440,7 @@ export default function App() {
             name: p.name,
             days: diffDays,
             stage: p.current_stage,
-            responsible: p.current_stage === 1 ? p.assigned_ventas : p.current_stage === 3 ? p.assigned_lider : p.current_stage === 4 ? p.assigned_costos : p.current_stage === 5 ? "Noe Ortiz" : p.assigned_ventas
+            responsible: p.current_stage === 1 ? p.assigned_ventas : p.current_stage === 3 ? p.assigned_lider : p.current_stage === 4 ? p.assigned_costos : p.current_stage === 5 ? "Dirección General" : p.assigned_ventas
           });
         } catch {}
       }
@@ -1775,416 +1832,48 @@ export default function App() {
           
           {/* TAB 1: DASHBOARD */}
           {activeTab === 'dashboard' && hasPrivilege('dashboards') && (
-            <div className="space-y-8">
-              
-
-
-              {/* KPI / filtros — vista ejecutiva */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-5">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#0F4C81]">Centro de control comercial</p>
-                    <h1 className="text-xl font-black text-slate-900 mt-1">Dashboard General</h1>
-                    <p className="text-[11px] text-slate-500 mt-1">Indicadores, pipeline y alertas calculados sobre las licitaciones visibles.</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                      <Building2 size={14} className="text-[#0F4C81]" />
-                      <select
-                        value={dashboardClientFilter}
-                        onChange={(e) => { setDashboardClientFilter(e.target.value); setDashboardFilter('Todos'); }}
-                        className="bg-transparent text-xs font-bold text-slate-700 outline-none min-w-[180px]"
-                      >
-                        <option value="Todos">Todos los clientes</option>
-                        {clientsList.filter(c => c.active !== false && c.active !== 0).map(c => (
-                          <option key={c.id} value={c.name}>{c.name}</option>
-                        ))}
-                        {dashboardVisibleProjects
-                          .map(p => p.client)
-                          .filter(Boolean)
-                          .filter(c => !clientsList.some(x => x.name === c))
-                          .filter((c, i, a) => a.indexOf(c) === i)
-                          .map(c => <option key={`legacy-${c}`} value={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                      <Filter size={14} className="text-slate-500" />
-                      <select
-                        value={dashboardFilter}
-                        onChange={(e) => setDashboardFilter(e.target.value)}
-                        className="bg-transparent text-xs font-bold text-slate-700 outline-none min-w-[170px]"
-                      >
-                        <option value="Todos">Todas las licitaciones</option>
-                        {dashboardVisibleProjects.map(p => (
-                          <option key={p.id} value={p.id}>{p.id} · {p.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+            <div className="min-w-0 space-y-5 text-[#0F1B2D]">
+              <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');`}</style>
+              <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+                <div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#0F4C81]">Centro de control comercial</p><h1 className="text-2xl font-semibold tracking-tight text-[#0F1B2D] mt-1">Dashboard General</h1><p className="text-xs text-[#4A5B73] mt-1">Visión ejecutiva de licitaciones, avance por paso y desempeño comercial.</p></div>
+                {isAdminOrDirector && <div className="flex flex-wrap gap-2 shrink-0"><button onClick={() => handleDownloadReport('/api/reports/executive')} className="h-10 px-4 rounded-lg bg-[#0F4C81] text-white text-xs font-semibold hover:bg-[#0B3566] transition flex items-center gap-2"><Upload size={13} className="rotate-180" /> Descargar reporte de Dirección (Word)</button><button onClick={handleEmailExecutiveReport} disabled={emailSending} className="h-10 px-4 rounded-lg bg-white text-[#0F4C81] border border-[#0F4C81] text-xs font-semibold hover:bg-[#F3F6FA] transition flex items-center gap-2 disabled:opacity-60"><Send size={13} /> {emailSending ? 'Enviando...' : 'Enviar reporte por correo'}</button></div>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2 bg-white border border-[#DAE1EB] rounded-lg px-3 py-2 min-w-0"><Building2 size={13} className="text-[#0F4C81] shrink-0" /><select value={dashboardClientFilter} onChange={(e) => { setDashboardClientFilter(e.target.value); setDashboardFilter('Todos'); }} className="bg-transparent text-xs font-medium text-[#4A5B73] outline-none min-w-0 max-w-[240px]"><option value="Todos">Todos los clientes</option>{clientsList.filter(c => c.active !== false && c.active !== 0).map(c => <option key={c.id} value={c.name}>{c.name}</option>)}{dashboardVisibleProjects.map(p => p.client).filter(Boolean).filter(c => !clientsList.some(x => x.name === c)).filter((c,i,a) => a.indexOf(c) === i).map(c => <option key={`legacy-${c}`} value={c}>{c}</option>)}</select></div>
+                <div className="flex items-center gap-2 bg-white border border-[#DAE1EB] rounded-lg px-3 py-2 min-w-0"><Filter size={13} className="text-[#5B7FA6] shrink-0" /><select value={dashboardFilter} onChange={(e) => setDashboardFilter(e.target.value)} className="bg-transparent text-xs font-medium text-[#4A5B73] outline-none min-w-0 max-w-[280px]"><option value="Todos">Todas las licitaciones</option>{dashboardVisibleProjects.map(p => <option key={p.id} value={p.id}>{p.id} · {p.name}</option>)}</select></div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+                {[
+                  { label:'Monto cotizado', value:`$${Number(dashboardMetrics.total_quoted || 0).toLocaleString('en-US',{maximumFractionDigits:0})}`, sub:`${dashboardMetrics.total_projects ?? projects.length} licitaciones`, tone:'text-[#0F1B2D]' },
+                  { label:'Monto ganado', value:`$${Number(dashboardMetrics.total_won || 0).toLocaleString('en-US',{maximumFractionDigits:0})}`, sub:`${Number(dashboardMetrics.total_quoted || 0) ? ((Number(dashboardMetrics.total_won || 0)/Number(dashboardMetrics.total_quoted || 1))*100).toFixed(1) : '0.0'} % del cotizado`, tone:'text-[#0F766E]' },
+                  { label:'Efectividad', value:`${Number(dashboardMetrics.effectiveness || 0).toFixed(1)} %`, sub:`${dashboardMetrics.won_count ?? 0} ganadas de ${(dashboardMetrics.won_count ?? 0)+(dashboardMetrics.lost_count ?? 0)} cerradas`, tone:'text-[#0F1B2D]' },
+                  { label:'Ganadas', value:dashboardMetrics.won_count ?? 0, sub:`${dashboardMetrics.total_projects ? ((Number(dashboardMetrics.won_count || 0)/Number(dashboardMetrics.total_projects || 1))*100).toFixed(0) : 0} % del total`, tone:'text-[#0F766E]' },
+                  { label:'Perdidas', value:dashboardMetrics.lost_count ?? 0, sub:`${dashboardMetrics.total_projects ? ((Number(dashboardMetrics.lost_count || 0)/Number(dashboardMetrics.total_projects || 1))*100).toFixed(0) : 0} % del total`, tone:'text-[#C2410C]' },
+                  { label:'En proceso', value:dashboardMetrics.in_progress_count ?? 0, sub:`${dashboardMetrics.total_projects ? ((Number(dashboardMetrics.in_progress_count || 0)/Number(dashboardMetrics.total_projects || 1))*100).toFixed(0) : 0} % del total`, tone:'text-[#0F4C81]' }
+                ].map((kpi,idx)=><div key={idx} className="bg-white border border-[#DAE1EB] rounded-[10px] p-4 min-w-0"><span className="text-[10px] font-medium text-[#4A5B73] block">{kpi.label}</span><strong className={`block text-2xl font-semibold mt-1 tabular-nums ${kpi.tone}`}>{kpi.value}</strong><span className="text-[10px] text-[#4A5B73] block mt-1 truncate" title={kpi.sub}>{kpi.sub}</span></div>)}
+              </div>
+              <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.8fr)] gap-5 items-start">
+                <div className="bg-white border border-[#DAE1EB] rounded-[10px] p-5 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4"><div><h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#4A5B73]">Cotizado vs. ganado por licitación</h2><p className="text-[10px] text-[#4A5B73] mt-1">Largo de barra = monto cotizado · el color identifica el estado.</p></div><div className="flex flex-wrap gap-3 text-[10px] text-[#4A5B73]"><span><i className="inline-block w-4 h-2 rounded mr-1 bg-[#0F766E]" />Ganada</span><span><i className="inline-block w-4 h-2 rounded mr-1 bg-[#C2410C]" />Perdida</span><span><i className="inline-block w-4 h-2 rounded mr-1 bg-[#5B7FA6]" />En proceso</span></div></div>
+                  {(() => { const rows=[...(dashboardMetrics.quoted_vs_won||[])].sort((a,b)=>Number(b.quoted||0)-Number(a.quoted||0)); const maxQuoted=Math.max(...rows.map(r=>Number(r.quoted||0)),1); const statusTone={Ganado:'#0F766E',Perdido:'#C2410C','En Proceso':'#5B7FA6',Cancelado:'#7B8794'}; return rows.length ? <div className="space-y-3 max-h-[430px] overflow-y-auto pr-1">{rows.map((r,idx)=>{const quoted=Number(r.quoted||0),won=Number(r.won||0),status=r.status||'En Proceso',width=Math.max(quoted>0?3:0,(quoted/maxQuoted)*100),tone=statusTone[status]||'#5B7FA6'; return <div key={r.id||idx} className="min-w-0"><div className="flex items-center justify-between gap-3 mb-1 text-[10px]"><div className="min-w-0 flex items-center gap-2"><span className="font-mono text-[#0F4C81] font-medium shrink-0">{r.id}</span><span className="text-[#4A5B73] truncate" title={r.name}>{r.name||'Sin nombre'}</span></div><span className="font-medium shrink-0" style={{color:tone}}>{status}</span></div><div className="h-3 bg-[#E6EBF2] rounded-full overflow-hidden"><div className="h-full rounded-full" style={{width:`${width}%`,backgroundColor:tone}} title={`Cotizado: $${quoted.toLocaleString('en-US')} · Ganado: $${won.toLocaleString('en-US')}`} /></div><div className="flex justify-between gap-3 mt-1 text-[9px] text-[#4A5B73]"><span>Cotizado: ${quoted.toLocaleString('en-US',{maximumFractionDigits:0})}</span><span>Ganado: ${won.toLocaleString('en-US',{maximumFractionDigits:0})}</span></div></div>})}</div> : <p className="text-xs text-[#4A5B73] italic py-8 text-center">No hay licitaciones para mostrar.</p> })()}
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-                  {[
-                    { label: 'Licitaciones', value: dashboardMetrics.total_projects ?? 0, icon: Folder, tone: 'text-[#0F4C81]', bg: 'bg-blue-50' },
-                    { label: 'Monto cotizado', value: `$${(dashboardMetrics.total_quoted ?? 0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`, icon: CircleDollarSign, tone: 'text-slate-700', bg: 'bg-slate-100' },
-                    { label: 'Monto ganado', value: `$${(dashboardMetrics.total_won ?? 0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`, icon: Trophy, tone: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { label: 'Efectividad comercial', value: `${(dashboardMetrics.effectiveness ?? 0).toFixed(1)}%`, icon: TrendingUp, tone: 'text-indigo-600', bg: 'bg-indigo-50' },
-                    { label: 'En proceso', value: dashboardMetrics.in_progress_count ?? 0, icon: Clock3, tone: 'text-amber-600', bg: 'bg-amber-50' }
-                  ].map((kpi, idx) => {
-                    const Icon = kpi.icon;
-                    return (
-                      <div key={idx} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 hover:bg-white hover:shadow-sm transition">
-                        <div className="flex items-center justify-between">
-                          <span className={`w-9 h-9 rounded-lg ${kpi.bg} ${kpi.tone} flex items-center justify-center`}><Icon size={18}/></span>
-                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">DC Control</span>
-                        </div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-3">{kpi.label}</p>
-                        <p className={`text-xl font-black mt-0.5 ${kpi.tone}`}>{kpi.value}</p>
-                      </div>
-                    );
-                  })}
+                <div className="space-y-5 min-w-0">
+                  <div className="bg-white border border-[#DAE1EB] rounded-[10px] p-5"><h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#4A5B73] mb-4">Estatus de licitaciones</h2><DonutChart totalText="Lics" data={[{label:'Ganada',value:Number(dashboardMetrics.won_count||0),color:'#0F766E'},{label:'Perdida',value:Number(dashboardMetrics.lost_count||0),color:'#C2410C'},{label:'En proceso',value:Number(dashboardMetrics.in_progress_count||0),color:'#5B7FA6'},{label:'Cancelada',value:Number(dashboardMetrics.cancelled_count||0),color:'#7B8794'}].filter(x=>x.value>0)} /></div>
+                  <div className="bg-white border border-[#DAE1EB] rounded-[10px] p-5"><h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#4A5B73] mb-3">📉 Porcentaje de Desfase por Proyecto Perdido</h2>{(()=>{const lost=[...(dashboardMetrics.lost_projects||[])].map(x=>({...x,gap:Number(x.gap||0)})).sort((a,b)=>b.gap-a.gap),top=lost[0],gap=Math.max(0,Math.min(100,top?top.gap:0));return top?<><div className="flex items-baseline gap-2"><strong className="text-4xl font-semibold text-[#C2410C] tabular-nums">{gap.toFixed(1)} %</strong><span className="text-[10px] text-[#4A5B73]">sobre el monto ganador</span></div><div className="h-2.5 rounded-full bg-[#E6EBF2] overflow-hidden mt-3"><div className="h-full rounded-full bg-[#C2410C]" style={{width:`${gap}%`}} /></div><div className="flex justify-between text-[9px] text-[#4A5B73] mt-1"><span>0 %</span><span>50 %</span><span>100 %</span></div><div className="font-mono text-[10px] text-[#4A5B73] mt-3 truncate" title={top.name}>{top.id} · {top.name||'Sin nombre'}</div></>:<p className="text-xs text-[#4A5B73] italic py-5">No hay cotizaciones perdidas con desfase financiero registrado.</p>})()}</div>
                 </div>
               </div>
-
-              {/* Download Executive Word Report Button */}
-              {isAdminOrDirector && (
-                <div className="flex flex-wrap gap-3">
-                  <button 
-                    onClick={() => handleDownloadReport('/api/reports/executive')}
-                    className="bg-[#0F4C81] hover:bg-[#0B3566] text-white text-xs font-bold px-4 py-2.5 rounded-lg flex items-center space-x-2 transition shadow-xs"
-                  >
-                    <Upload size={14} className="rotate-180" />
-                    <span>Descargar Reporte de Dirección (Word)</span>
-                  </button>
-                  <button 
-                    onClick={handleEmailExecutiveReport}
-                    disabled={emailSending}
-                    className={`bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold px-4 py-2.5 rounded-lg flex items-center space-x-2 transition shadow-xs ${emailSending ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  >
-                    <Send size={14} />
-                    <span>{emailSending ? "Enviando Reporte..." : "Enviar Reporte por Correo a Dirección"}</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Pipeline Active Summary Table */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm text-slate-800">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800 flex items-center"><ListChecks size={16} className="mr-2 text-[#0F4C81]" />Resumen de Cotizaciones en Curso</h3>
-                    <p className="text-[10px] text-slate-500">Muestra el estatus de las cotizaciones activas de forma secuencial.</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[10px] text-slate-500">Cliente:</span><select value={pipelineClientFilter} onChange={(e) => setPipelineClientFilter(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-[#0F4C81]"><option value="Todos">Todos</option>{Array.from(new Set([...clientsList.map(c => typeof c === "string" ? c : c.name), ...projects.map(p => String(p.client || "").trim()).filter(Boolean)])).sort().map(client => (<option key={client} value={client}>{client}</option>))}</select><span className="text-[10px] text-slate-500">Licitación:</span>
-                    <select
-                      value={dashboardFilter}
-                      onChange={(e) => setDashboardFilter(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-[#0F4C81]"
-                    >
-                      <option value="Todos">Todas</option>
-                      {dashboardVisibleProjects.map(p => (
-                        <option key={p.id} value={p.id}>{p.id} - {p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-200 text-slate-500 font-bold uppercase text-[9px] bg-slate-950">
-                        <th className="py-2.5 px-3">Folio ID</th>
-                        <th className="py-2.5 px-3">Proyecto / Obra</th>
-                        <th className="py-2.5 px-3">Cliente</th>
-                        <th className="py-2.5 px-3">Paso Atorado</th>
-                        <th className="py-2.5 px-3">Responsable</th>
-                        <th className="py-2.5 px-3">Fecha Compromiso</th>
-                        <th className="py-2.5 px-3 text-right">Monto Estimado</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {projects
-                        .filter(p => pipelineClientFilter === 'Todos' || String(p.client || '').trim() === pipelineClientFilter)
-                        .filter(p => dashboardFilter === 'Todos' || p.id === dashboardFilter)
-                        .map(p => (
-                          <tr key={p.id} className="hover:bg-slate-100/50 transition">
-                            <td className="py-2.5 px-3 font-bold text-[#0F4C81]">{p.id}</td>
-                            <td className="py-2.5 px-3 text-slate-900 font-semibold">{p.name || 'Sin nombre'}</td>
-                            <td className="py-2.5 px-3 text-slate-700">{p.client || 'Sin cliente'}</td>
-                            <td className="py-2.5 px-3 text-slate-700 font-bold">Paso {p.current_stage || 1}</td>
-                            <td className="py-2.5 px-3 text-slate-500">
-                              {p.current_stage === 1 ? p.assigned_ventas : p.current_stage === 2 ? `${p.assigned_ventas} / ${p.assigned_lider}` : p.current_stage === 3 ? p.assigned_lider : p.current_stage === 4 ? p.assigned_costos : "Dirección"}
-                            </td>
-                            <td className="py-2.5 px-3 text-slate-500">{p.target_date || 'No definida'}</td>
-                            <td className="py-2.5 px-3 text-right text-slate-900 font-extrabold">
-                              ${(p.final_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div className="bg-white border border-[#DAE1EB] rounded-[10px] p-5 min-w-0"><h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#4A5B73] mb-4">Monto ganado por estado</h2><DonutChart totalText="Ganado" data={dashboardMetrics.won_amount_by_state||[]} currencyMode={true} /></div>
+                <div className="bg-white border border-[#DAE1EB] rounded-[10px] p-5 min-w-0"><h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#4A5B73] mb-4">Seguimiento de compuertas · licitaciones activas por paso</h2><div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">{(dashboardMetrics.active_by_step||[]).map((s,idx)=>{const active=Number(s.count||0)>0,labels=['Levantamiento','Minuta / Reunión','Catálogo','Cotización','Revisión Dirección','Entrega Cliente','Cierre Comercial'];return <div key={s.step||idx} className={`rounded-lg p-3 text-center border ${active?'bg-[#0F4C81] border-[#0F4C81] text-white':'bg-[#F3F6FA] border-[#DAE1EB] text-[#0F1B2D]'}`}><strong className="block text-xl font-semibold tabular-nums">{s.count||0}</strong><span className={`block text-[9px] mt-1 ${active?'text-[#DCE6F2]':'text-[#4A5B73]'}`}>{s.step||`P${idx+1}`}</span><span className={`block text-[8px] mt-1 leading-tight ${active?'text-[#DCE6F2]':'text-[#4A5B73]'}`}>{labels[idx]}</span></div>})}</div></div>
               </div>
-
-
-              {/* Graphical Diagnoses Panel (Executive Light Layout with SVGs) */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* SVG Charts Card */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-6 text-slate-800">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center">
-                    <Sparkles className="mr-1.5 text-[#0F4C81]" size={14} /> Diagnóstico Gráfico Comercial
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Donut Chart 1: Distribución */}
-                    <div className="border border-slate-100 p-4 rounded-lg bg-slate-50">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-3">Estatus de Cotizaciones</span>
-                      <DonutChart 
-                        totalText="Lics"
-                        data={[
-                          { label: 'Ganado', value: dashboardMetrics.status_counts?.find(x => x.label === 'Ganado')?.value || 0, color: '#10B981' },
-                          { label: 'Perdido', value: dashboardMetrics.status_counts?.find(x => x.label === 'Perdido')?.value || 0, color: '#C23B22' },
-                          { label: 'Cancelado', value: dashboardMetrics.status_counts?.find(x => x.label === 'Cancelado')?.value || 0, color: '#6B7280' },
-                          { label: 'En Proceso', value: dashboardMetrics.status_counts?.find(x => x.label === 'En Proceso')?.value || 0, color: '#0F4C81' }
-                        ]} 
-                      />
-                    </div>
-
-                    {/* Donut Chart 2: Monto ganado por estado */}
-                    <div className="border border-slate-100 p-4 rounded-lg bg-slate-50">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-3">Monto Total Ganado por Estado</span>
-                      <DonutChart
-                        totalText="Ganado"
-                        data={dashboardMetrics.won_amount_by_state || []}
-                        currencyMode={true}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                    {/* Bar Chart 3: Cuellos de Botella por Paso */}
-                    <div className="border border-slate-100 p-4 rounded-lg bg-slate-50">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-2">Proyectos Activos por Paso</span>
-                      {(() => {
-                        const stepsCount = dashboardMetrics.active_by_step || [1,2,3,4,5,6,7].map(num => ({
-                          step: `P${num}`,
-                          count: 0
-                        }));
-                        const maxCount = Math.max(...stepsCount.map(s => s.count), 1);
-                        return (
-                          <div className="flex items-end justify-between h-40 pt-5 px-2 border-b border-slate-200">
-                            {stepsCount.map((s, idx) => {
-                              const heightPercent = (s.count / maxCount) * 100;
-                              return (
-                                <div key={idx} className="flex flex-col items-center flex-1 group">
-                                  <span className="text-[11px] font-black text-slate-800 mb-1">{s.count}</span>
-                                  <div 
-                                    className="w-3 bg-[#0F4C81] rounded-t hover:bg-[#C23B22] transition-all cursor-pointer" 
-                                    style={{ height: `${Math.max(6, heightPercent)}%` }}
-                                    title={`Paso ${idx+1}: ${s.count} lics`}
-                                  ></div>
-                                  <span className="text-[8px] font-black text-slate-500 mt-1">{s.step}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                      <div className="flex justify-between text-[8px] text-slate-500 mt-1 px-1">
-                        <span>P1: Levantamiento</span>
-                        <span>P7: Cierre</span>
-                      </div>
-                    </div>
-
-                    {/* Cotizado vs ganado: comparación con diagonal de referencia */}
-                    <div className="border border-slate-100 p-4 rounded-lg bg-slate-50 col-span-1 lg:col-span-2">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-1">Cotizado vs. Ganado</span>
-                      <p className="text-[9px] text-slate-500 mb-3">Cada punto representa una licitación. La diagonal indica coincidencia entre monto cotizado y monto ganado.</p>
-                      {(() => {
-                        const rows = dashboardMetrics.quoted_vs_won || [];
-                        const maxVal = Math.max(...rows.map(r => Math.max(r.quoted, r.won)), 1);
-                        const W = 720, H = 280, L = 62, R = 20, T = 18, B = 42;
-                        const innerW = W - L - R, innerH = H - T - B;
-                        const sx = v => L + (v / maxVal) * innerW;
-                        const sy = v => T + innerH - (v / maxVal) * innerH;
-                        return (
-                          <div className="overflow-x-auto">
-                            <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[620px] h-64">
-                              <line x1={L} y1={sy(0)} x2={W-R} y2={sy(0)} stroke="#CBD5E1" strokeWidth="1" />
-                              <line x1={L} y1={sy(0)} x2={L} y2={T} stroke="#CBD5E1" strokeWidth="1" />
-                              <line x1={L} y1={sy(0)} x2={W-R} y2={T} stroke="#94A3B8" strokeWidth="2" strokeDasharray="6 5" />
-                              {[0, 0.25, 0.5, 0.75, 1].map((tick, i) => {
-                                const val = maxVal * tick;
-                                return (
-                                  <g key={i}>
-                                    <text x={sx(val)} y={H-18} textAnchor="middle" fontSize="8" fill="#64748B">${Math.round(val).toLocaleString()}</text>
-                                    <text x={L-8} y={sy(val)+3} textAnchor="end" fontSize="8" fill="#64748B">${Math.round(val).toLocaleString()}</text>
-                                  </g>
-                                );
-                              })}
-                              {rows.map((r, i) => (
-                                <circle key={r.id || i} cx={sx(r.quoted)} cy={sy(r.won)} r="4" fill={r.won > 0 ? '#10B981' : '#94A3B8'} opacity="0.85">
-                                  <title>{`${r.id} — Cotizado: $${r.quoted.toLocaleString()} | Ganado: $${r.won.toLocaleString()}`}</title>
-                                </circle>
-                              ))}
-                              <text x={W/2} y={H-3} textAnchor="middle" fontSize="9" fontWeight="700" fill="#475569">Monto cotizado</text>
-                              <text x="14" y={H/2} textAnchor="middle" fontSize="9" fontWeight="700" fill="#475569" transform={`rotate(-90 14 ${H/2})`}>Monto ganado</text>
-                              <text x={W-R-4} y={T+12} textAnchor="end" fontSize="8" fill="#64748B">Referencia 1:1</text>
-                            </svg>
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Gráfica: Desfase por Proyecto Perdido (%) */}
-                    <div className="border border-slate-100 p-4 rounded-lg bg-slate-50 col-span-1 lg:col-span-2">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-3">
-                        📉 Porcentaje de Desfase por Proyecto Perdido
-                      </span>
-
-                      {(() => {
-                        const lostProjects = dashboardMetrics.lost_projects || [];
-
-                        if (lostProjects.length === 0) {
-                          return (
-                            <p className="text-[10px] text-slate-500 italic w-full text-center py-8">
-                              No hay cotizaciones 'Perdidas' con desfase financiero registrado.
-                            </p>
-                          );
-                        }
-
-                        const chartData = lostProjects
-                          .map((p) => ({
-                            id: p.id,
-                            name: p.name || p.id,
-                            gap: Number(p.gap || 0),
-                          }))
-                          .sort((a, b) => b.gap - a.gap);
-
-                        const maxGap = Math.max(...chartData.map((p) => p.gap), 1);
-
-                        return (
-                          <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
-                            {chartData.map((p, idx) => {
-                              const widthPercent = Math.max((p.gap / maxGap) * 100, p.gap > 0 ? 4 : 0);
-
-                              return (
-                                <div key={`${p.id}-${idx}`} className="space-y-1">
-                                  <div className="flex items-center justify-between gap-3 text-[10px]">
-                                    <span
-                                      className="font-mono text-[#0F4C81] font-bold truncate"
-                                      title={p.name}
-                                    >
-                                      {p.id}
-                                    </span>
-
-                                    <span className="font-black text-slate-700 shrink-0">
-                                      {p.gap.toFixed(1)}%
-                                    </span>
-                                  </div>
-
-                                  <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
-                                    <div
-                                      className="bg-[#C23B22] h-full rounded-full transition-all"
-                                      style={{ width: `${widthPercent}%` }}
-                                      title={`${p.name}: ${p.gap.toFixed(1)}%`}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Bar Chart 4: Licitaciones Ganadas por Estado */}
-                    <div className="border border-slate-100 p-4 rounded-lg bg-slate-50">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block mb-2">Top Estados Ganados</span>
-                      {(() => {
-                        const wonByState = {};
-                        (dashboardMetrics.won_by_state || []).forEach(item => {
-                          wonByState[item.label] = item.value;
-                        });
-                        const statesData = Object.keys(wonByState).map(state => ({
-                          state,
-                          count: wonByState[state]
-                        })).sort((a,b) => b.count - a.count).slice(0, 5);
-                        
-                        const maxStateCount = Math.max(...statesData.map(s => s.count), 1);
-                        return (
-                          <div className="flex items-end justify-between h-40 pt-5 px-2 border-b border-slate-200">
-                            {statesData.length === 0 ? (
-                              <p className="text-[10px] text-slate-500 italic w-full text-center pb-6">Sin licitaciones ganadas aún.</p>
-                            ) : (
-                              statesData.map((s, idx) => {
-                                const heightPercent = (s.count / maxStateCount) * 100;
-                                return (
-                                  <div key={idx} className="flex flex-col items-center flex-1 group">
-                                    <span className="text-[11px] font-black text-slate-800 mb-1">{s.count}</span>
-                                    <div 
-                                      className="w-8 bg-emerald-500 rounded-t hover:bg-[#0F4C81] transition-all cursor-pointer" 
-                                      style={{ height: `${Math.max(20, Math.round((s.count / maxStateCount) * 120))}px` }}
-                                      title={`${s.state}: ${s.count}`}
-                                    ></div>
-                                    <span className="text-[9px] font-black text-slate-600 mt-2 text-center leading-tight truncate w-full" title={s.state}>{s.state}</span>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        );
-                      })()}
-                      <div className="text-[8px] text-slate-500 mt-1 text-center">
-                        <span>Licitaciones ganadas por región</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Semáforo alert list (Light Mode style) */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4 text-slate-800">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center">
-                    <AlertTriangle className="mr-1.5 text-[#C23B22]" size={14} /> Alertas de Fecha de Entrega Próxima
-                  </h3>
-                  
-                  <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
-                    {semaforoWarnings.length === 0 ? (
-                      <p className="text-xs text-slate-500 italic p-6 text-center bg-slate-50 rounded-lg">No hay alertas activas de fechas de entrega.</p>
-                    ) : (
-                      semaforoWarnings.map((w, idx) => {
-                        let alertColor = "bg-emerald-50 text-emerald-700 border-emerald-100";
-                        let tag = "En Tiempo";
-                        if (w.days < 0) {
-                          alertColor = "bg-red-50 text-[#C23B22] border-red-100";
-                          tag = `VENCIDO (${Math.abs(w.days)} días)`;
-                        } else if (w.days <= 7) {
-                          alertColor = "bg-amber-50 text-amber-700 border-amber-100";
-                          tag = `URGENTE (${w.days} días)`;
-                        }
-
-                        return (
-                          <div key={idx} className={`p-3.5 border rounded-lg flex justify-between items-start text-xs ${alertColor} shadow-2xs`}>
-                            <div>
-                              <p className="font-bold text-slate-900">{w.id} - {w.name}</p>
-                              <p className="text-[10px] text-slate-500 mt-1">Ubicación: <strong>Paso {w.stage}</strong> | Responsable: {w.responsible}</p>
-                            </div>
-                            <span className="px-2.5 py-1 rounded text-[9px] font-extrabold uppercase border border-current bg-white">{tag}</span>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-
-
-
+              <div className="bg-white border border-[#DAE1EB] rounded-[10px] p-5 min-w-0"><div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4"><div><h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#4A5B73]">Resumen de Cotizaciones en Curso</h3><p className="text-[10px] text-[#4A5B73] mt-1">Muestra el estatus de las cotizaciones activas de forma secuencial.</p></div><div className="flex flex-wrap items-center gap-2"><span className="text-[10px] text-[#4A5B73]">Cliente:</span><select value={pipelineClientFilter} onChange={(e)=>setPipelineClientFilter(e.target.value)} className="bg-white border border-[#DAE1EB] rounded-lg px-2.5 py-1.5 text-xs text-[#4A5B73]"><option value="Todos">Todos</option>{Array.from(new Set([...clientsList.map(c=>typeof c==='string'?c:c.name),...projects.map(p=>String(p.client||'').trim()).filter(Boolean)])).sort().map(client=><option key={client} value={client}>{client}</option>)}</select><span className="text-[10px] text-[#4A5B73]">Licitación:</span><select value={dashboardFilter} onChange={(e)=>setDashboardFilter(e.target.value)} className="bg-white border border-[#DAE1EB] rounded-lg px-2.5 py-1.5 text-xs text-[#4A5B73]"><option value="Todos">Todas</option>{dashboardVisibleProjects.map(p=><option key={p.id} value={p.id}>{p.id} - {p.name}</option>)}</select></div></div><div className="overflow-x-auto max-w-full"><table className="w-full min-w-[760px] text-left text-xs border-collapse"><thead><tr className="border-b border-[#DAE1EB] text-[#4A5B73] font-semibold uppercase text-[9px]"><th className="py-2.5 px-3">Folio ID</th><th className="py-2.5 px-3">Proyecto / Obra</th><th className="py-2.5 px-3">Cliente</th><th className="py-2.5 px-3">Paso</th><th className="py-2.5 px-3">Responsable</th><th className="py-2.5 px-3">Fecha</th><th className="py-2.5 px-3 text-right">Monto</th></tr></thead><tbody className="divide-y divide-[#E6EBF2]">{projects.filter(p=>pipelineClientFilter==='Todos'||String(p.client||'').trim()===pipelineClientFilter).filter(p=>dashboardFilter==='Todos'||p.id===dashboardFilter).map(p=><tr key={p.id} className="hover:bg-[#F3F6FA] transition"><td className="py-2.5 px-3 font-mono font-medium text-[#0F4C81]">{p.id}</td><td className="py-2.5 px-3 font-medium text-[#0F1B2D]">{p.name||'Sin nombre'}</td><td className="py-2.5 px-3 text-[#4A5B73]">{p.client||'Sin cliente'}</td><td className="py-2.5 px-3 font-medium">P{p.current_stage||1}</td><td className="py-2.5 px-3 text-[#4A5B73]">{p.current_stage===1?p.assigned_ventas:p.current_stage===2?`${p.assigned_ventas} / ${p.assigned_lider}`:p.current_stage===3?p.assigned_lider:p.current_stage===4?p.assigned_costos:'Dirección General'}</td><td className="py-2.5 px-3 text-[#4A5B73]">{p.target_date||'No definida'}</td><td className="py-2.5 px-3 text-right font-medium">${Number(p.final_amount||0).toLocaleString('en-US',{maximumFractionDigits:0})}</td></tr>)}</tbody></table></div></div>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div className="bg-white border border-[#DAE1EB] rounded-[10px] p-5 min-w-0"><h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#4A5B73] mb-3">Alertas de fecha de entrega próxima</h3><div className="space-y-2 max-h-64 overflow-y-auto">{semaforoWarnings.length===0?<p className="text-xs text-[#4A5B73] italic p-5 text-center bg-[#F3F6FA] rounded-lg">No hay alertas activas de fechas de entrega.</p>:semaforoWarnings.map((w,idx)=>{const alertClass=w.days<0?'border-[#C2410C]/30 bg-[#FFF4EF]':w.days<=7?'border-amber-200 bg-amber-50':'border-[#DAE1EB] bg-[#F3F6FA]';return <div key={idx} className={`p-3 border rounded-lg ${alertClass}`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-xs font-semibold truncate">{w.id} · {w.name}</p><p className="text-[10px] text-[#4A5B73] mt-1">Paso {w.stage} · {w.responsible}</p></div><span className="text-[9px] font-semibold shrink-0">{w.days<0?`Vencido (${Math.abs(w.days)} días)`:w.days<=7?`Urgente (${w.days} días)`:'En tiempo'}</span></div></div>})}</div></div>
+                <div className="bg-white border border-[#DAE1EB] rounded-[10px] p-5 min-w-0"><h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#4A5B73] mb-3">Notificaciones y comentarios recientes</h3>{recentCommentHistory.length===0?<p className="text-xs text-[#4A5B73] italic py-6 text-center">No hay comentarios recientes para mostrar.</p>:<div className="divide-y divide-[#E6EBF2] max-h-64 overflow-y-auto">{recentCommentHistory.map((item,idx)=><div key={`${item.project_id}-${item.timestamp}-${idx}`} className="py-3 first:pt-0"><span className="font-mono text-[9px] text-[#0F4C81] block mb-1">{item.project_id} · {item.kind==='regreso'?`regreso al Paso ${item.target||item.step}`:`Paso ${item.step} → Paso ${Number(item.step||0)+1}`}</span><span className="text-xs text-[#0F1B2D]">{item.text}</span></div>)}</div>}</div>
               </div>
-
             </div>
           )}
-{/* TAB 2: DESEMPEÑO */}
+          {/* TAB 2: DESEMPEÑO */}
           {activeTab === 'desempeno' && (
             <div className="space-y-6">
               <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm text-slate-800">
@@ -3119,11 +2808,33 @@ export default function App() {
                           {activeStepTab === 2 && "Reunión de alineación. Exige la confirmación del Agente de Ventas y el Líder Regional de forma independiente."}
                           {activeStepTab === 3 && "Análisis técnico de conceptos de obra realizado por el departamento de Ingeniería y Costos."}
                           {activeStepTab === 4 && "Construcción de la propuesta económica final con precios unitarios, márgenes y utilidad."}
-                          {activeStepTab === 5 && "Revisión y aprobación por parte de la Dirección General (Noe Ortiz) para liberar o solicitar modificaciones."}
+                          {activeStepTab === 5 && "Revisión y aprobación por parte de la Dirección General para liberar o solicitar modificaciones."}
                           {activeStepTab === 6 && "Envío formal de la cotización final aprobada al cliente y registro de constancia técnica."}
                           {activeStepTab === 7 && "Cierre comercial: Definir estatus final como Ganado o Perdido (registrando desfase financiero si aplica)."}
                         </p>
                       </div>
+
+                      {/* Historial de comentarios de pasos anteriores */}
+                      {activeStepTab > 1 && (
+                        <div className="bg-[#F3F6FA] border border-[#DAE1EB] rounded-xl p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <MessageSquare size={13} className="text-[#0F4C81]" />
+                            <h5 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#4A5B73]">Historial de comentarios anteriores</h5>
+                          </div>
+                          {stepCommentHistory.length === 0 ? (
+                            <p className="text-xs text-[#4A5B73] italic">No hay comentarios registrados en pasos anteriores.</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {stepCommentHistory.map((item, idx) => (
+                                <div key={`${item.timestamp}-${idx}`} className="bg-white border border-[#E6EBF2] rounded-lg px-3 py-2">
+                                  <div className="font-mono text-[9px] text-[#5B7FA6] mb-1">{item.step_label}{item.kind === 'regreso' && item.target ? ` · regreso al Paso ${item.target}` : ''}</div>
+                                  <div className="text-xs text-[#0F1B2D]">{item.text}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* File uploads specific for this selected step tab */}
                       {activeStepTab !== 7 && (

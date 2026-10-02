@@ -70,6 +70,7 @@ import base64
 import io
 import re
 import threading
+import logging
 import urllib.request
 import smtplib
 from email.mime.text import MIMEText
@@ -516,6 +517,251 @@ def log_audit(project_id, user_name, role, action, comments=None):
     finally:
         put_db_connection(conn)
 
+logger = logging.getLogger("dc_control")
+
+COMMENT_EMPTY = "--"
+
+
+def get_project_comment_history(project_id, before_step=None):
+    """Historial de comentarios por paso (avances y regresos) tomado de audit_log.
+
+    Devuelve una lista cronologica con el texto listo para mostrar:
+    "Nombre comento: <comentario>" o "Nombre comento: --" si no escribio nada.
+    Con before_step solo regresa lo que ese paso debe ver: comentarios de pasos
+    anteriores y motivos de regreso dirigidos a ese paso o a uno previo.
+    """
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("""
+            SELECT user_name, role, action, timestamp, comments
+            FROM audit_log
+            WHERE project_id = %s
+              AND (action LIKE %s OR action LIKE %s OR action LIKE %s)
+            ORDER BY timestamp ASC, id ASC
+        """, (
+            str(project_id),
+            "Valido y avanzo el Paso %",
+            "Regreso el proyecto al Paso %",
+            "Returned project from Step 4 to Step 3%",
+        ))
+        rows = cursor.fetchall()
+    finally:
+        put_db_connection(conn)
+
+    history = []
+    for r in rows:
+        action = str(r["action"] or "")
+        target = None
+        m_adv = re.match(r"Valido y avanzo el Paso (\d+)", action)
+        m_ret = re.match(r"Regreso el proyecto al Paso (\d+) desde el Paso (\d+)", action)
+        if m_adv:
+            step, kind = int(m_adv.group(1)), "avance"
+        elif m_ret:
+            target, step, kind = int(m_ret.group(1)), int(m_ret.group(2)), "regreso"
+        elif action.startswith("Returned project from Step 4 to Step 3"):
+            target, step, kind = 3, 4, "regreso"
+        else:
+            continue
+
+        comment = str(r["comments"] or "").strip()
+        if not comment:
+            # Respaldo para registros viejos: el comentario tambien viaja dentro de 'action'.
+            m_txt = re.search(r"(?:Comentario|Motivo): (.*)$", action, re.S)
+            comment = m_txt.group(1).strip() if m_txt else ""
+        if comment.lower() == "none":
+            comment = ""
+
+        if before_step is not None:
+            visible = step < before_step or (kind == "regreso" and target is not None and target <= before_step)
+            if not visible:
+                continue
+
+        who = str(r["user_name"] or "Usuario").strip() or "Usuario"
+        label = f"{who} comentó (regresó al Paso {target})" if kind == "regreso" else f"{who} comentó"
+        history.append({
+            "step": step,
+            "step_label": f"Paso {step}",
+            "kind": kind,
+            "user_name": who,
+            "role": str(r["role"] or ""),
+            "comment": comment,
+            "text": f"{label}: {comment or COMMENT_EMPTY}",
+            "timestamp": str(r["timestamp"] or ""),
+        })
+    return history
+
+
+def _comments_block_html(history):
+    if not history:
+        return ""
+    from html import escape
+    items = "".join(f'<li style="margin-bottom: 6px;">{escape(h["text"])}</li>' for h in history)
+    return (
+        '<div style="background-color: #fffbeb; padding: 15px; border-radius: 4px; '
+        'border-left: 4px solid #d97706; margin: 16px 0;">'
+        '<strong>Historial de comentarios a considerar:</strong>'
+        f'<ul style="margin: 8px 0 0 18px; padding: 0;">{items}</ul>'
+        '</div>'
+    )
+
+
+def _send_teams_card(title, intro, facts, people=None):
+    teams_url = os.getenv("TEAMS_WEBHOOK_URL", "").strip() or get_system_setting("teams_webhook_url")
+    if not (teams_url and teams_url.startswith("http")):
+        logger.warning("Teams: no hay webhook configurado; se omite la tarjeta (%s)", title)
+        return
+    try:
+        people = people or []
+        mentions_text = ", ".join(f"<at>{fn}</at>" for em, fn in people) or "Equipo"
+        entities = [{
+            "type": "mention",
+            "text": f"<at>{fn}</at>",
+            "mentioned": {"id": em, "name": fn}
+        } for em, fn in people]
+        card_payload = {
+            "type": "message",
+            "attachments": [{
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                    "type": "AdaptiveCard",
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "version": "1.2",
+                    "body": [
+                        {"type": "TextBlock", "text": title, "weight": "Bolder", "size": "Medium", "color": "Good"},
+                        {"type": "TextBlock", "text": f"Hola {mentions_text}, {intro}", "wrap": True},
+                        {"type": "FactSet", "facts": facts}
+                    ],
+                    "msteams": {"entities": entities}
+                }
+            }]
+        }
+        req = urllib.request.Request(
+            teams_url,
+            data=json.dumps(card_payload).encode('utf-8'),
+            headers={'Content-Type': 'application/json'}
+        )
+        with urllib.request.urlopen(req, timeout=15):
+            pass
+    except Exception:
+        logger.exception("Teams: no se pudo enviar la tarjeta (%s)", title)
+
+
+def dispatch_new_project_notifications(project_id):
+    if get_system_setting("notifications_enabled", "0") != "1":
+        logger.warning(
+            "Notificaciones desactivadas (notifications_enabled != 1): no se avisó de la nueva licitación %s",
+            project_id
+        )
+        return
+    thread = threading.Thread(target=_bg_dispatch_new_project_notifications, args=(project_id,))
+    thread.daemon = True
+    thread.start()
+
+
+def _bg_dispatch_new_project_notifications(project_id):
+    from html import escape
+    recipients = []
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("SELECT * FROM projects WHERE id = %s", (project_id,))
+        p = cursor.fetchone()
+        if not p:
+            return
+
+        roles = [
+            (p['assigned_ventas'], "Ventas"),
+            (p['assigned_lider'], "Líder Regional"),
+            (p['assigned_costos'], "Analista de Costos"),
+        ]
+        for name, role_label in roles:
+            name = str(name or "").strip()
+            if not name:
+                continue
+            cursor.execute("SELECT email, full_name FROM users WHERE TRIM(full_name) = %s", (name,))
+            for r in cursor.fetchall():
+                if r['email'] and "@" in r['email']:
+                    recipients.append((r['email'], r['full_name'], role_label))
+
+        if not recipients:
+            cursor.execute("SELECT email, full_name FROM users WHERE role LIKE '%Director%' OR role LIKE '%Admin%'")
+            for d in cursor.fetchall():
+                if d['email'] and "@" in d['email']:
+                    recipients.append((d['email'], d['full_name'], "Dirección"))
+    except Exception:
+        logger.exception("Nueva licitación %s: no se pudo preparar la notificación", project_id)
+        return
+    finally:
+        put_db_connection(conn)
+
+    unique = {}
+    for em, fn, role_label in recipients:
+        key = em.strip().lower()
+        if key not in unique:
+            unique[key] = (em.strip(), str(fn or "").strip(), role_label)
+    people = list(unique.values())
+    if not people:
+        logger.warning("Nueva licitación %s: ningún usuario asignado tiene correo registrado", project_id)
+        return
+
+    try:
+        amount = float(p['final_amount'] or 0)
+    except Exception:
+        amount = 0.0
+    folio = str(project_id)
+    nombre = escape(str(p['name'] or ""))
+    cliente = escape(str(p['client'] or ""))
+    estado = escape(str(p['state'] or "No definido"))
+    prioridad = escape(str(p['priority'] or "No definida"))
+    fecha = escape(str(p['target_date'] or "No definida"))
+    resp_p1 = escape(str(p['assigned_ventas'] or "Por asignar"))
+
+    for email, f_name, role_label in people:
+        try:
+            subject = f"DC Control - Nueva Licitación Asignada: {folio} - {p['name']}"
+            body = f"""<html>
+<body style="font-family: Arial, sans-serif; color: #333333; line-height: 1.6;">
+    <div style="background-color: #111827; color: white; padding: 20px; border-radius: 6px 6px 0 0; border-left: 6px solid #0F4C81;">
+        <h2 style="margin: 0; font-size: 20px;">DC Control - Gestión Comercial</h2>
+    </div>
+    <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 6px 6px;">
+        <p>Hola <strong>{escape(f_name)}</strong>,</p>
+        <p>Se registró una nueva licitación: <strong>{escape(folio)} - {nombre}</strong> para el cliente <strong>{cliente}</strong>.</p>
+        <p><strong>Tu asignación:</strong> {escape(role_label)}</p>
+        <p style="background-color: #f3f4f6; padding: 15px; border-radius: 4px; border-left: 4px solid #0F4C81;">
+            <strong>Siguiente Acción Requerida:</strong><br>
+            <span style="font-size: 16px; font-weight: bold; color: #111827;">Paso 1: Levantamiento Técnico</span><br>
+            <span style="color: #4b5563;">Cargar la evidencia y datos técnicos del levantamiento de la obra.</span>
+        </p>
+        <p><strong>Responsable del Paso 1:</strong> {resp_p1}</p>
+        <p><strong>Estado:</strong> {estado} &nbsp;|&nbsp; <strong>Prioridad:</strong> {prioridad}</p>
+        <p><strong>Monto estimado:</strong> ${amount:,.2f}</p>
+        <p><strong>Fecha Compromiso:</strong> {fecha}</p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+        <p style="font-size: 13px; color: #6b7280;">Ingresa al sistema de DC Control para completar tus asignaciones.</p>
+    </div>
+</body>
+</html>"""
+            send_ms_graph_email(to_emails=email, subject=subject, body_html=body)
+        except Exception:
+            logger.exception("Nueva licitación %s: no se pudo enviar el correo a %s", folio, email)
+
+    _send_teams_card(
+        "🔵 **DC Control - Nueva Licitación Asignada**",
+        f"se registró la licitación **{folio} - {p['name']}**.",
+        [
+            {"title": "Cliente:", "value": str(p['client'] or "")},
+            {"title": "Estado:", "value": str(p['state'] or "No definido")},
+            {"title": "Monto estimado:", "value": f"${amount:,.2f}"},
+            {"title": "Primera Tarea:", "value": "Paso 1: Levantamiento Técnico"},
+            {"title": "Responsable:", "value": str(p['assigned_ventas'] or "Por asignar")},
+            {"title": "Fecha Límite:", "value": str(p['target_date'] or "No definida")},
+        ],
+        [(em, fn) for em, fn, _ in people],
+    )
+
+
 # Automated Notification Dispatches
 def dispatch_parameter_change_notifications(project_id, new_step_num, new_target_date, justification):
     if get_system_setting("notifications_enabled", "0") != "1":
@@ -655,6 +901,10 @@ def _bg_dispatch_parameter_change_notifications(project_id, new_step_num, new_ta
 
 def dispatch_step_completion_notifications(project_id, completed_step_num):
     if get_system_setting("notifications_enabled", "0") != "1":
+        logger.warning(
+            "Notificaciones desactivadas (notifications_enabled != 1): no se avisó del avance del proyecto %s",
+            project_id
+        )
         return
     thread = threading.Thread(target=_bg_dispatch_step_completion_notifications, args=(project_id, completed_step_num))
     thread.daemon = True
@@ -717,9 +967,18 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                 if d['email'] and "@" in d['email']:
                     emails.append((d['email'], d['full_name']))
     except Exception:
+        logger.exception("Avance de etapa %s: no se pudo preparar la notificación", project_id)
         return
     finally:
         put_db_connection(conn)
+
+    try:
+        comment_history = get_project_comment_history(project_id, before_step=next_step_num)
+    except Exception:
+        logger.exception("Avance de etapa %s: no se pudo leer el historial de comentarios", project_id)
+        comment_history = []
+    comments_html = _comments_block_html(comment_history)
+    comments_plain = "\n".join(h["text"] for h in comment_history)
 
     # Strictly deduplicate emails by both lowercase email and full name to guarantee exactly 1 notification
     unique_emails = {}
@@ -752,6 +1011,7 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
         </p>
         <p><strong>Responsable Asignado:</strong> {meta['assignee']}</p>
         <p><strong>Fecha Compromiso:</strong> {p['target_date']}</p>
+        {comments_html}
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
         <p style="font-size: 13px; color: #6b7280;">Ingresa al sistema de DC Control para completar tus asignaciones.</p>
     </div>
@@ -763,7 +1023,7 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                     body_html=body
                 )
             except Exception:
-                pass
+                logger.exception("Avance de etapa %s: no se pudo enviar el correo a %s", project_id, email)
 
     teams_url = os.getenv("TEAMS_WEBHOOK_URL", "").strip() or get_system_setting("teams_webhook_url")
     if teams_url and teams_url.startswith("http"):
@@ -804,7 +1064,8 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
                                         {"title": "Cliente:", "value": str(p['client'])},
                                         {"title": "Siguiente Tarea:", "value": str(meta['name'])},
                                         {"title": "Responsable:", "value": str(meta['assignee'])},
-                                        {"title": "Fecha Límite:", "value": str(p['target_date'] or "No definida")}
+                                        {"title": "Fecha Límite:", "value": str(p['target_date'] or "No definida")},
+                                        {"title": "Comentarios:", "value": comments_plain or "--"}
                                     ]
                                 }
                             ],
@@ -821,7 +1082,7 @@ def _bg_dispatch_step_completion_notifications(project_id, completed_step_num):
             with urllib.request.urlopen(req) as response:
                 pass
         except Exception:
-            pass
+            logger.exception("Avance de etapa %s: no se pudo enviar la tarjeta de Teams", project_id)
 
 def dispatch_rejection_notification(project_id, step_num, justification):
     if get_system_setting("notifications_enabled", "0") != "1":
@@ -1544,7 +1805,8 @@ def get_dashboard_summary(current_user=Depends(get_current_user)):
                 "id": str(row["id"]),
                 "name": str(row["name"] or ""),
                 "quoted": quoted,
-                "won": quoted if row["status"] == "Ganado" else 0
+                "won": quoted if row["status"] == "Ganado" else 0,
+                "status": str(row["status"] or "")
             })
 
         # ============================================================
@@ -1737,6 +1999,11 @@ def create_project(req: CreateProjectRequest, current_user=Depends(require_admin
             ))
         conn.commit()
         log_audit(final_code, "SISTEMA", "Admin/Director", f"Creó licitación con código {final_code} y carpeta SharePoint {sp_folder_url}")
+        if not req.skip_to_cierre:
+            try:
+                dispatch_new_project_notifications(final_code)
+            except Exception:
+                logger.exception("Nueva licitación %s: falló el disparo de notificaciones", final_code)
         return {"success": True, "id": final_code, "sharepoint_folder_url": sp_folder_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -2231,9 +2498,8 @@ def update_step_action(req: StepActionRequest, current_user=Depends(get_current_
         cursor.execute("UPDATE projects SET current_stage = %s WHERE id = %s", (new_stage, req.project_id))
         conn.commit()
 
-        if not req.is_reversal:
-            dispatch_step_completion_notifications(req.project_id, current_stage)
-
+        # Primero se registra el comentario y luego se notifica, para que el correo
+        # y Teams incluyan el comentario recién capturado en el historial.
         log_audit(
             req.project_id,
             current_user.get("full_name") or current_user.get("username") or "Usuario",
@@ -2241,6 +2507,9 @@ def update_step_action(req: StepActionRequest, current_user=Depends(get_current_
             action_desc,
             comments=req.comments
         )
+
+        if not req.is_reversal:
+            dispatch_step_completion_notifications(req.project_id, current_stage)
         return {"success": True, "new_stage": new_stage}
     except HTTPException:
         raise
@@ -3813,6 +4082,26 @@ def p4_return_to_p3(project_id: str, comments: str = "", current_user=Depends(ge
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         put_db_connection(conn)
+
+@app.get("/api/projects/{project_id}/comments")
+def get_project_comments(project_id: str, before_step: Optional[int] = None, current_user=Depends(get_current_user)):
+    """Historial de comentarios del proyecto.
+
+    Con ?before_step=N regresa lo que debe ver el Paso N (comentarios de los pasos
+    anteriores). Cada elemento trae 'text' listo para mostrar, por ejemplo:
+    "Noe Ortiz comentó: texto" o "Noe Ortiz comentó: --" si no escribió nada.
+    """
+    p = _get_project_by_id(project_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    require_project_read_access(current_user, p)
+    history = get_project_comment_history(project_id, before_step)
+    return {
+        "project_id": project_id,
+        "before_step": before_step,
+        "history": history,
+        "texts": [h["text"] for h in history],
+    }
 
 # Servir frontend React/Vite desde el mismo Web Service de Render
 DIST_DIR = Path(__file__).resolve().parent.parent / "dist"
